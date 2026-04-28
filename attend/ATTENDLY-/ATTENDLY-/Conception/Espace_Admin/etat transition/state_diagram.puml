@@ -1,0 +1,63 @@
+@startuml
+[*] --> NonConnecte : Ouverture de l'application
+
+NonConnecte : Formulaire login affiché
+NonConnecte --> Authentification : Soumission email + mot de passe
+
+Authentification : Vérification des identifiants
+Authentification --> NonConnecte : Identifiants invalides / erreur
+Authentification --> Dashboard : Authentification réussie
+
+Dashboard : Vue principale admin
+Dashboard --> GestionProfesseurs : Accès gestion professeurs
+Dashboard --> ConsultationEtudiants : Accès étudiants
+Dashboard --> ConsultationPresences : Accès présences
+Dashboard --> GestionNotes : Accès notes
+Dashboard --> GestionRapports : Accès rapports
+Dashboard --> NonConnecte : Déconnexion
+
+state GestionProfesseurs {
+  [*] --> ListeProfesseurs
+  ListeProfesseurs --> ModifierProfesseur : Sélection d'un professeur
+  ModifierProfesseur --> ListeProfesseurs : Modifications enregistrées
+  ListeProfesseurs --> SupprimerProfesseur : Sélection d'un professeur
+  SupprimerProfesseur --> ListeProfesseurs : Professeur supprimé
+  ListeProfesseurs --> [*] : Fermer
+}
+
+state ConsultationEtudiants {
+  [*] --> ListeEtudiants
+  ListeEtudiants --> AffichageDetails : Sélection d'un étudiant
+  AffichageDetails --> ListeEtudiants : Retour à la liste
+  ListeEtudiants --> [*] : Fermer
+}
+
+state ConsultationPresences {
+  [*] --> ListePresences
+  ListePresences --> AffichagePresences : Sélection d'un étudiant ou d'une classe
+  AffichagePresences --> ListePresences : Retour à la liste
+  ListePresences --> [*] : Fermer
+}
+
+state GestionNotes {
+  [*] --> ListeNotes
+  ListeNotes --> ModifierNote : Clic sur note
+  ModifierNote --> ListeNotes : Note enregistrée
+  ListeNotes --> [*] : Fermer
+}
+
+state GestionRapports {
+  [*] --> AffichageRapports
+  AffichageRapports --> ExportPDF : Clic "Exporter PDF"
+  AffichageRapports --> ExportExcel : Clic "Exporter Excel"
+  ExportPDF --> AffichageRapports : Fichier téléchargé
+  ExportExcel --> AffichageRapports : Fichier téléchargé
+  AffichageRapports --> [*] : Fermer
+}
+
+GestionProfesseurs --> Dashboard : Retour
+ConsultationEtudiants --> Dashboard : Retour
+ConsultationPresences --> Dashboard : Retour
+GestionNotes --> Dashboard : Retour
+GestionRapports --> Dashboard : Retour
+@enduml

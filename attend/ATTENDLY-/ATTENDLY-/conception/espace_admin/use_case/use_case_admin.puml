@@ -1,0 +1,35 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Administrateur" as Admin
+
+rectangle "Système de Gestion de Présence" {
+    
+    usecase "S'authentifier" as UC_Auth
+    usecase "Réinitialiser mot de passe" as UC_Reset
+    usecase "Consulter les statistiques" as UC_Stats
+    usecase "Exporter les données (PDF/Excel)" as UC_Export
+    usecase "Gérer les étudiants" as UC_Etudiants
+    usecase "Gérer les matières" as UC_Matieres
+    usecase "Gérer les niveaux" as UC_Niveaux
+    usecase "Gérer l'emploi du temps" as UC_Emploi
+    usecase "Consulter historique présences" as UC_Historique
+    usecase "Gérer les examens" as UC_Examens
+    
+    UC_Reset ..> UC_Auth : <<include>>
+    UC_Export ..> UC_Stats : <<extend>>
+}
+
+Admin --> UC_Auth
+Admin --> UC_Reset
+Admin --> UC_Stats
+Admin --> UC_Export
+Admin --> UC_Etudiants
+Admin --> UC_Matieres
+Admin --> UC_Niveaux
+Admin --> UC_Emploi
+Admin --> UC_Historique
+Admin --> UC_Examens
+
+@enduml

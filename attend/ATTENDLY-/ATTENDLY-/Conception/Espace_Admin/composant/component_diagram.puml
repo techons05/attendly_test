@@ -1,0 +1,53 @@
+@startuml
+skinparam componentStyle rectangle
+
+package "Frontend Admin" {
+  [Page Login] as Login
+  [Dashboard Admin] as Dashboard
+  [Gestion Utilisateurs] as GestionUsers
+  [Gestion Emploi du Temps] as GestionEDT
+  [Statistiques & Rapports] as Stats
+}
+
+package "Backend - Supabase" {
+  [Supabase Auth] as Auth
+  [Supabase Database (PostgreSQL)] as DB
+  [Supabase Storage] as Storage
+  [Edge Functions\n(Notifications email)] as EdgeFn
+  [Row Level Security (RLS)] as RLS
+}
+
+package "Export" {
+  [jsPDF] as PDF
+  [SheetJS] as Excel
+}
+
+package "Base de données" {
+  database "users" as TUsers
+  database "professeurs" as TProf
+  database "etudiants" as TEtud
+  database "matieres" as TMat
+  database "seances" as TSeanc
+  database "presences" as TPres
+  database "emploi_temps" as TEDT
+}
+
+Login --> Auth : authentification
+Dashboard --> DB : requêtes données
+GestionUsers --> Auth : réinitialiser compte
+GestionUsers --> DB :RUD utilisateurs
+GestionEDT --> DB : CRUD emploi du temps
+Stats --> DB : agrégation données
+Stats --> PDF : export PDF
+Stats --> Excel : export Excel
+Auth --> RLS : contrôle accès
+DB --> RLS : applique politiques
+EdgeFn --> DB : triggers notifications
+DB --> TUsers
+DB --> TProf
+DB --> TEtud
+DB --> TMat
+DB --> TSeanc
+DB --> TPres
+DB --> TEDT
+@enduml
