@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3b82f6">
+  <meta name="description" content="ATTENDLY - Gestion de présence des étudiants">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%233b82f6' width='100' height='100'/><text x='50' y='60' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>A</text></svg>">
+  <title>Notifications — Student</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- QR decoder library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js" integrity="sha512-E3xbQVL5G2DQFQMYQKJ1qFzeLkuVpKY/H5ij1jvRKxD2zJuI3KuWiLBx4Y+2PkLKN3E+FrQ0f2QpCXNsKVMEQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+
+<button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <img src="" alt="Avatar" class="avatar" id="sidebarAvatar">
+    <div class="user-name" id="sidebarName">—</div>
+    <div class="user-email" id="sidebarEmail">—</div>
+
+    <nav>
+      <a href="emploi.html"><span class="icon"></span>Emploi du temps</a>
+      <a href="notes.html"><span class="icon"></span>Notes</a>
+      <a href="profile.html"><span class="icon"></span>Profile</a>
+      <a href="notifications.html" class="active"><span class="icon"></span>Notifications</a>
+      <a href="parametres.html"><span class="icon"></span>Paramètres</a>
+    </nav>
+
+    <button class="btn-scan" onclick="openQR()">📷 Scanner QR</button>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <h1>Notifications</h1>
+      <p>Restez informée des dernières mises à jour</p>
+    </div>
+
+    <div class="content-card">
+      <ul class="notif-list" id="notifList">
+        <!-- Data loaded from database -->
+      </ul>
+      <div class="empty-state" id="emptyNotifs">
+        <div class="empty-icon">🔔</div>
+        <p>Aucune notification</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- QR Scan Modal -->
+<div class="qr-scan-overlay" id="qrScanModal">
+  <div class="qr-scan-card">
+    <button class="qr-scan-close" onclick="closeQRScan()">✕</button>
+    <div class="qr-scan-card-header">
+      <div class="qr-scan-card-header-icon">📋</div>
+      <div>
+        <h1>Pointage de présence</h1>
+        <p>Scannez le QR code affiché par le professeur</p>
+      </div>
+    </div>
+    <div class="qr-scan-body">
+      <div class="qr-scan-status-box" id="qr-status-box">
+        <span class="qr-scan-status-icon" id="qr-status-icon"></span>
+        <span id="qr-status-msg"></span>
+      </div>
+      <div class="qr-scan-step active" id="qr-step-idle">
+        <div class="qr-scan-idle-icon">📡</div>
+        <div class="qr-scan-idle-text">
+          <h2>Prêt à pointer</h2>
+          <p>Utilisez la caméra pour scanner le QR code<br>ou entrez le code manuellement.</p>
+        </div>
+        <div id="qr-device-badge-wrap"></div>
+        <button class="qr-scan-btn qr-scan-btn-primary" id="qr-btn-open-cam" style="display:none">📷 &nbsp;Scanner avec la caméra</button>
+        <button class="qr-scan-btn qr-scan-btn-secondary" id="qr-btn-open-manual">⌨️ &nbsp;Saisir le code manuellement</button>
+        <p class="qr-scan-security-note">Votre session est <span>chiffrée</span>. Le QR est valide une seule fois par étudiant.</p>
+      </div>
+      <div class="qr-scan-step" id="qr-step-perm">
+        <div class="qr-scan-idle-icon">🎥</div>
+        <div class="qr-scan-idle-text">
+          <h2>Accès à la caméra</h2>
+          <p>Pour scanner le QR code, l'autorisation d'accès à votre caméra est nécessaire.<br>Aucune image n'est enregistrée.</p>
+        </div>
+        <button class="qr-scan-btn qr-scan-btn-primary" id="qr-btn-request-cam">Autoriser la caméra</button>
+        <button class="qr-scan-btn qr-scan-btn-secondary" id="qr-btn-perm-skip">Saisir manuellement</button>
+      </div>
+      <div class="qr-scan-step" id="qr-step-camera">
+        <div class="qr-viewfinder-wrap">
+          <video id="camera-video" autoplay playsinline muted></video>
+          <canvas id="camera-canvas"></canvas>
+          <div class="qr-scan-overlay-frame">
+            <div class="qr-scan-frame">
+              <div class="corner-br"></div>
+              <div class="corner-bl"></div>
+            </div>
+          </div>
+          <div class="qr-scan-laser"></div>
+        </div>
+        <p class="qr-scan-cam-hint">Centrez le QR code dans le cadre</p>
+        <button class="qr-scan-btn qr-scan-btn-danger" id="qr-btn-stop-cam">✕ &nbsp;Arrêter la caméra</button>
+      </div>
+      <div class="qr-scan-step" id="qr-step-manual">
+        <div class="qr-scan-input-group">
+          <label>Code QR (affiché au tableau)</label>
+          <div class="qr-scan-input-row">
+            <input type="text" id="qr-manual-code" placeholder="ex: A3F7-K2P9-..." maxlength="64" autocomplete="off" autocorrect="off" spellcheck="false"/>
+          </div>
+        </div>
+        <div class="qr-scan-btn-row">
+          <button class="qr-scan-btn qr-scan-btn-secondary" id="qr-btn-manual-back">← Retour</button>
+          <button class="qr-scan-btn qr-scan-btn-primary" id="qr-btn-manual-submit">Valider</button>
+        </div>
+      </div>
+      <div class="qr-scan-step" id="qr-step-loading">
+        <div class="qr-scan-idle-icon" style="font-size:28px">⏳</div>
+        <div class="qr-scan-idle-text">
+          <h2>Vérification en cours…</h2>
+          <p>Validation de la session et enregistrement de votre présence.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;color:#6b7a99;font-size:13px">
+          <div class="qr-scan-spinner"></div> Connexion à Supabase…
+        </div>
+      </div>
+      <div class="qr-scan-step" id="qr-step-success">
+        <div class="qr-scan-success-anim">✓</div>
+        <div class="qr-scan-success-info">
+          <h2>Présence enregistrée !</h2>
+          <p id="qr-success-time"></p>
+        </div>
+        <div class="qr-scan-attendance-detail" id="qr-attendance-detail"></div>
+        <button class="qr-scan-btn qr-scan-btn-secondary" id="qr-btn-restart">↩ Nouveau scan</button>
+      </div>
+      <div class="qr-scan-step" id="qr-step-error">
+        <div class="qr-scan-idle-icon" style="font-size:30px">⚠️</div>
+        <div class="qr-scan-idle-text">
+          <h2 id="qr-err-title">Une erreur est survenue</h2>
+          <p id="qr-err-msg" style="color:#6b7a99;font-size:13px;margin-top:6px"></p>
+        </div>
+        <button class="qr-scan-btn qr-scan-btn-primary" id="qr-btn-retry">↩ Réessayer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

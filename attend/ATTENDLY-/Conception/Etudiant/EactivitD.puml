@@ -1,0 +1,67 @@
+@startuml
+title "Diagramme d'Activités - Système Étudiant"
+
+start
+
+:Accéder à l'application;
+
+if (A un compte ?) then (Oui)
+  :Saisir email et mot de passe;
+  :Cliquer sur "Se connecter";
+else (Non)
+  :Cliquer sur "S'inscrire";
+  :Remplir formulaire d'inscription;
+  :Valider l'inscription;
+  :Saisir email et mot de passe;
+  :Cliquer sur "Se connecter";
+endif
+
+:Vérifier les identifiants;
+
+if (Identifiants valides ?) then (Oui)
+  :Créer session utilisateur;
+  :Générer token d'authentification;
+  :Accéder au tableau de bord;
+  
+  while (Actions disponibles ?) is (Effectuer une action)
+    if (Choix) then (Consulter emploi du temps)
+      :Récupérer emploi du temps;
+      :Afficher cours planifiés;
+      :Visualiser l'emploi;
+    elseif (Consulter les notes)
+      :Récupérer notes de l'étudiant;
+      :Calculer moyennes;
+      :Afficher résultats;
+      :Visualiser les notes;
+    elseif (Marquer présence)
+      :Ouvrir scanner QR Code;
+      :Scanner le code QR;
+      :Décoder le QR Code;
+      
+      if (Code QR valide ?) then (Oui)
+        :Enregistrer présence;
+        :Mettre à jour base de données;
+        :Afficher confirmation;
+      else (Non)
+        :Afficher message d'erreur;
+        :Réessayer;
+      endif
+    elseif (Se déconnecter)
+      :Cliquer sur "Déconnexion";
+      :Détruire session;
+      :Invalider token;
+      :Rediriger vers page d'accueil;
+      break
+    endif
+  endwhile (Se déconnecter)
+  
+else (Non)
+  :Afficher message d'erreur;
+  :Proposer réessayer;
+  :Réessayer la connexion;
+  stop
+endif
+
+stop
+
+@enduml

@@ -1,0 +1,74 @@
+@startuml
+title "Diagramme de Séquence - Système Étudiant"
+
+actor "Étudiant" as E
+participant "Interface" as UI
+control "Authentification" as Auth
+control "Emploi" as CtrlEmploi
+control "Notes" as CtrlNotes
+control "Présence" as CtrlPresence
+database "Base de Données" as DB
+
+== Authentification ==
+
+E -> UI : Saisir email/mot de passe
+E -> UI : Cliquer "Se connecter"
+UI -> Auth : authenticate(email, mdp)
+Auth -> DB : vérifier credentials
+DB --> Auth : utilisateur trouvé
+
+alt Identifiants valides
+  Auth -> DB : créer session
+  DB --> Auth : token généré
+  Auth --> UI : token + données utilisateur
+  UI --> E : Afficher tableau de bord
+else Identifiants invalides
+  Auth --> UI : erreur authentification
+  UI --> E : Afficher message d'erreur
+end
+
+== Consulter Emploi du Temps ==
+
+E -> UI : Cliquer "Mon Emploi"
+UI -> CtrlEmploi : getEmploi(etudiantId, token)
+CtrlEmploi -> DB : vérifier token
+DB --> CtrlEmploi : token valide
+CtrlEmploi -> DB : récupérer emploi
+DB --> CtrlEmploi : liste des cours
+CtrlEmploi --> UI : emploi du temps
+UI --> E : Afficher emploi
+
+== Consulter les Notes ==
+
+E -> UI : Cliquer "Mes Notes"
+UI -> CtrlNotes : getNotes(etudiantId, token)
+CtrlNotes -> DB : vérifier token
+DB --> CtrlNotes : token valide
+CtrlNotes -> DB : récupérer notes
+DB --> CtrlNotes : liste des notes
+CtrlNotes --> UI : notes + moyennes
+UI --> E : Afficher notes
+
+== Marquer Présence via QR Code ==
+
+E -> UI : Cliquer "Scanner QR"
+UI --> E : Ouvrir caméra
+E -> UI : Scanner QR Code
+UI -> CtrlPresence : verifierQR(code)
+CtrlPresence -> DB : valider QR code
+DB --> CtrlPresence : QR valide
+CtrlPresence -> DB : enregistrer présence
+DB --> CtrlPresence : présence enregistrée
+CtrlPresence --> UI : confirmation
+UI --> E : "Présence marquée"
+
+== Déconnexion ==
+
+E -> UI : Cliquer "Déconnexion"
+UI -> Auth : logout(token)
+Auth -> DB : invalider session
+DB --> Auth : session supprimée
+Auth --> UI : confirmation
+UI --> E : Rediriger vers login
+
+@enduml

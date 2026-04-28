@@ -1,0 +1,83 @@
+@startuml Sequence_Espace_Professeur
+title Diagramme de Séquence — Espace Professeur
+
+skinparam sequenceArrowThickness 1.5
+skinparam responseMessageBelowArrow true
+skinparam sequenceParticipant underline
+skinparam participant {
+  BackgroundColor #F5F3FF
+  BorderColor #7C3AED
+  FontColor #1F2937
+}
+skinparam actor {
+  BackgroundColor #DBEAFE
+  BorderColor #1D4ED8
+}
+skinparam sequence {
+  LifeLineBorderColor #9CA3AF
+  LifeLineBackgroundColor #F3F4F6
+  DividerBackgroundColor #EDE9FE
+  DividerBorderColor #7C3AED
+  DividerFontColor #4C1D95
+}
+
+actor      "Professeur" as Prof
+participant "Interface"  as UI
+participant "Serveur"    as SRV
+database   "Base DB"    as DB
+
+== 1. Authentification ==
+
+Prof -> UI  : login(email, motDePasse)
+UI   -> SRV : authentifier()
+SRV  -> DB  : vérifier professeur
+DB  --> SRV : profil validé
+SRV --> Prof : session ouverte (token)
+
+== 2. Consultation emploi du temps ==
+
+Prof -> UI  : consulterEmploi()
+UI   -> SRV : getEmploiDuTemps(profId)
+SRV  -> DB  : SELECT cours & horaires
+DB  --> SRV : liste des cours
+SRV --> UI  : emploi du temps
+UI  --> Prof : afficher planning
+
+== 3. Lancer la présence — génération QR code ==
+
+Prof -> UI  : lancerPresence(coursId)
+UI   -> SRV : creerPresence(coursId)
+SRV  -> DB  : INSERT présence (coursId, date)
+SRV  -> SRV : genererQR(token, expireA = now + 15 min)
+SRV  -> DB  : INSERT qrcode (token, expireA, duree=15)
+SRV --> UI  : QRCode image + expiration
+UI  --> Prof : afficher QR code (15 min)
+
+== 4. Consultation & marquage manuel ==
+
+Prof -> UI  : consulterPresences(coursId)
+UI   -> SRV : getPresences(presenceId)
+SRV  -> DB  : SELECT présences & statuts
+DB  --> SRV : liste de présence
+SRV --> UI  : tableau de présence
+UI  --> Prof : afficher liste
+
+Prof -> UI  : marquerManuellement(presenceId, statut)
+UI   -> SRV : setPresenceManuelle(presenceId, statut)
+SRV  -> DB  : INSERT/UPDATE statut\n(saisieManuelle = true)
+SRV --> UI  : mise à jour confirmée
+UI  --> Prof : tableau rafraîchi
+
+== 5. Saisie et publication des notes ==
+
+Prof -> UI  : saisirNotes(groupeId, notes[])
+UI   -> SRV : enregistrerNotes(data[])
+SRV  -> DB  : INSERT / UPDATE notes
+SRV --> Prof : notes enregistrées
+
+Prof -> UI  : publierNotes(groupeId)
+UI   -> SRV : publierNotes(groupeId)
+SRV  -> DB  : UPDATE notes SET publie = true
+SRV --> Prof : notes transmises à l'admin
+
+@enduml

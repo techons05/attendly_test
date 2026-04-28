@@ -1,0 +1,29 @@
+@startuml
+title "Diagramme d'États-Transitions - Session Étudiant"
+
+[*] --> Déconnecté
+
+Déconnecté --> FormulaireAuth : Ouvrir application
+
+FormulaireAuth --> Authentification : Saisir identifiants
+
+Authentification --> TableauDeBord : Identifiants valides
+Authentification --> FormulaireAuth : Identifiants invalides
+
+TableauDeBord --> ConsultationEmploi : Consulter emploi
+TableauDeBord --> ConsultationNotes : Consulter notes
+TableauDeBord --> ScanQR : Marquer présence
+TableauDeBord --> Déconnecté : Se déconnecter
+
+ConsultationEmploi --> TableauDeBord : Retour
+
+ConsultationNotes --> TableauDeBord : Retour
+
+ScanQR --> CodeQRValide : QR Code scanné
+ScanQR --> TableauDeBord : Annuler
+
+CodeQRValide --> TableauDeBord : Présence enregistrée
+
+Déconnecté --> [*]
+
+@enduml

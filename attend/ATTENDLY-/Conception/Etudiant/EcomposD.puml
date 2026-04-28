@@ -1,0 +1,44 @@
+@startuml
+title "Diagramme de Composants - Système Étudiant"
+
+skinparam componentStyle rectangle
+
+package "Couche Présentation" {
+  [Interface Mobile/Web] as UI
+}
+
+package "Couche Métier" {
+  [Gestionnaire Authentification] as AuthMgr
+  [Gestionnaire Emploi] as EmploiMgr
+  [Gestionnaire Notes] as NotesMgr
+  [Gestionnaire Présence] as PresenceMgr
+  [Générateur QR Code] as QRGen
+  [Gestionnaire Sessions] as SessionMgr
+}
+
+package "Couche Données" {
+  database "Base de Données" as DB
+}
+
+package "Services Externes" {
+  [Service Email] as EmailService
+}
+
+' Relations
+UI --> AuthMgr : utilise
+UI --> EmploiMgr : utilise
+UI --> NotesMgr : utilise
+UI --> PresenceMgr : utilise
+
+AuthMgr --> SessionMgr : crée session
+AuthMgr --> EmailService : envoi email
+PresenceMgr --> QRGen : génère QR
+
+AuthMgr --> DB : vérifie utilisateur
+SessionMgr --> DB : gère sessions
+EmploiMgr --> DB : récupère emploi
+NotesMgr --> DB : récupère notes
+PresenceMgr --> DB : enregistre présence
+QRGen --> DB : infos cours
+
+@enduml

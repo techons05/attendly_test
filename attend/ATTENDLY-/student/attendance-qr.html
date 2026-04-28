@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pointage de présence - ATTENDLY</title>
+
+  <!-- QR decoder library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ── Reset & variables ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0f1e;
+      --surface:   #111827;
+      --surface2:  #1a2235;
+      --border:    rgba(255,255,255,0.08);
+      --accent:    #4f8ef7;
+      --accent2:   #38d9a9;
+      --danger:    #f05252;
+      --warn:      #fbbf24;
+      --text:      #e8eaf0;
+      --muted:     #6b7a99;
+      --radius:    16px;
+      --font:      'Segoe UI', system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background-image:
+        radial-gradient(ellipse 60% 40% at 50% -10%, rgba(79,142,247,0.15) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 80% 110%, rgba(56,217,169,0.1) 0%, transparent 60%);
+    }
+
+    /* ── Card wrapper ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 440px;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    }
+
+    /* ── Header ── */
+    .card-header {
+      padding: 24px 28px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .header-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .header-text h1 {
+      font-size: 17px; font-weight: 600; letter-spacing: -0.2px;
+    }
+    .header-text p {
+      font-size: 12px; color: var(--muted); margin-top: 2px;
+    }
+
+    /* ── Session info badge ── */
+    .session-badge {
+      margin: 18px 28px 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: none;
+      gap: 8px;
+      flex-direction: column;
+    }
+    .session-badge.visible { display: flex; }
+    .badge-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px;
+    }
+    .badge-label { color: var(--muted); }
+    .badge-val { font-weight: 500; font-size: 12px; }
+    .badge-val.active {
+      color: var(--accent2);
+      background: rgba(56,217,169,0.1);
+      padding: 2px 8px; border-radius: 20px;
+    }
+
+    /* ── Main content ── */
+    .card-body { padding: 24px 28px 28px; }
+
+    /* ── Steps ── */
+    .step { display: none; flex-direction: column; align-items: center; gap: 16px; }
+    .step.active { display: flex; }
+
+    /* Idle state */
+    .idle-icon {
+      width: 80px; height: 80px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px;
+    }
+    .idle-text { text-align: center; }
+    .idle-text h2 { font-size: 15px; font-weight: 600; }
+    .idle-text p { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+
+    /* ── Camera viewfinder ── */
+    .viewfinder-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1/1;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+    }
+    #camera-video {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    #camera-canvas { display: none; }
+
+    /* Scan overlay corners */
+    .scan-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .scan-frame {
+      width: 62%; height: 62%;
+      position: relative;
+    }
+    .scan-frame::before, .scan-frame::after,
+    .scan-frame .corner-br, .scan-frame .corner-bl {
+      content: '';
+      position: absolute;
+      width: 22px; height: 22px;
+      border-color: var(--accent);
+      border-style: solid;
+    }
+    .scan-frame::before  { top: 0; left: 0;  border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+    .scan-frame::after   { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+    .scan-frame .corner-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+    .scan-frame .corner-bl { bottom: 0; left: 0;  border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+
+    /* Scan laser line */
+    .scan-laser {
+      position: absolute;
+      left: 19%; right: 19%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      border-radius: 2px;
+      top: 19%;
+      animation: scan-sweep 2s ease-in-out infinite;
+    }
+    @keyframes scan-sweep {
+      0%   { top: 19%; opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { top: 81%; opacity: 0; }
+    }
+
+    .cam-hint {
+      font-size: 12px; color: var(--muted); text-align: center;
+    }
+
+    /* ── Manual input ── */
+    .input-group { width: 100%; }
+    .input-group label {
+      font-size: 12px; color: var(--muted);
+      display: block; margin-bottom: 8px; font-weight: 500;
+    }
+    .input-row { display: flex; gap: 8px; }
+    .input-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1.5px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-row input:focus { border-color: var(--accent); }
+    .input-row input::placeholder { color: var(--muted); letter-spacing: 0; font-family: var(--font); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 13px 22px;
+      border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.18s; white-space: nowrap;
+      width: 100%;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #3b82f6);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(79,142,247,0.3);
+    }
+    .btn-primary:hover  { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-primary:active { filter: brightness(0.95); transform: translateY(0); }
+    .btn-secondary {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger {
+      background: rgba(240,82,82,0.12);
+      border: 1px solid rgba(240,82,82,0.3);
+      color: var(--danger);
+    }
+    .btn-danger:hover { background: rgba(240,82,82,0.2); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    .btn-row { display: flex; gap: 8px; width: 100%; }
+    .btn-row .btn { flex: 1; }
+
+    /* ── Status / feedback ── */
+    .status-box {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.5;
+    }
+    .status-box.visible { display: flex; }
+    .status-box.info    { background: rgba(79,142,247,0.1);  border: 1px solid rgba(79,142,247,0.25); color: #93c5fd; }
+    .status-box.success { background: rgba(56,217,169,0.1);  border: 1px solid rgba(56,217,169,0.25); color: #6ee7b7; }
+    .status-box.error   { background: rgba(240,82,82,0.1);   border: 1px solid rgba(240,82,82,0.25);  color: #fca5a5; }
+    .status-box.warn    { background: rgba(251,191,36,0.1);  border: 1px solid rgba(251,191,36,0.25); color: #fde68a; }
+    .status-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Success card ── */
+    .success-anim {
+      width: 72px; height: 72px;
+      background: rgba(56,217,169,0.12);
+      border: 2px solid var(--accent2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px;
+      animation: pop-in 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    @keyframes pop-in {
+      from { transform: scale(0.3); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .success-info {
+      text-align: center;
+      width: 100%;
+    }
+    .success-info h2 { font-size: 18px; font-weight: 700; color: var(--accent2); }
+    .success-info p  { font-size: 13px; color: var(--muted); margin-top: 6px; }
+    .attendance-detail {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .attendance-detail .row {
+      display: flex; justify-content: space-between;
+      font-size: 12px; padding: 4px 0;
+    }
+    .attendance-detail .row span:first-child { color: var(--muted); }
+    .attendance-detail .row span:last-child  { font-weight: 500; }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Security notice ── */
+    .security-note {
+      margin-top: 16px;
+      font-size: 11px; color: var(--muted);
+      text-align: center; line-height: 1.5;
+    }
+    .security-note span { color: var(--accent); }
+
+    /* ── Device badge ── */
+    .device-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; color: var(--muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+      margin-bottom: 4px;
+    }
+
+    /* ── Back button ── */
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .back-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+<a href="emploi.html" class="back-btn">← Retour</a>
+
+<div class="card">
+
+  <!-- Header -->
+  <div class="card-header">
+    <div class="header-icon">📋</div>
+    <div class="header-text">
+      <h1>Pointage de présence</h1>
+      <p>Scannez le QR code affiché par le professeur</p>
+    </div>
+  </div>
+
+  <!-- Session info (populated after successful scan) -->
+  <div class="session-badge" id="session-badge">
+    <div class="badge-row">
+      <span class="badge-label">Matière</span>
+      <span class="badge-val" id="badge-subject">—</span>
+    </div>
+    <div class="badge-row">
+      <span class="badge-label">Promotion</span>
+      <span class="badge-val" id="badge-grade">—</span>
+    </div>
+    <div class="badge-row">
+      <span class="badge-label">Créneau</span>
+      <span class="badge-val" id="badge-time">—</span>
+    </div>
+    <div class="badge-row">
+      <span class="badge-label">Statut</span>
+      <span class="badge-val active">● Session active</span>
+    </div>
+  </div>
+
+  <div class="card-body">
+
+    <!-- STATUS BOX (shared) -->
+    <div class="status-box" id="status-box">
+      <span class="status-icon" id="status-icon"></span>
+      <span id="status-msg"></span>
+    </div>
+
+    <!-- STEP 1 : IDLE (choose mode) -->
+    <div class="step active" id="step-idle">
+      <div class="idle-icon">📡</div>
+      <div class="idle-text">
+        <h2>Prêt à pointer</h2>
+        <p>Utilisez la caméra pour scanner le QR code<br>ou entrez le code manuellement.</p>
+      </div>
+      <div id="device-badge-wrap"></div>
+      <button class="btn btn-primary" id="btn-open-cam" style="display:none">
+        📷 &nbsp;Scanner avec la caméra
+      </button>
+      <button class="btn btn-secondary" id="btn-open-manual">
+        ⌨️ &nbsp;Saisir le code manuellement
+      </button>
+      <p class="security-note">
+        Votre session est <span>chiffrée</span>. Le QR est valide une seule fois par étudiant.
+      </p>
+    </div>
+
+    <!-- STEP 2 : CAMERA PERMISSION -->
+    <div class="step" id="step-perm">
+      <div class="idle-icon">🎥</div>
+      <div class="idle-text">
+        <h2>Accès à la caméra</h2>
+        <p>Pour scanner le QR code, l'autorisation d'accès à votre caméra est nécessaire.<br>
+        Aucune image n'est enregistrée.</p>
+      </div>
+      <button class="btn btn-primary" id="btn-request-cam">
+        Autoriser la caméra
+      </button>
+      <button class="btn btn-secondary" id="btn-perm-skip">
+        Saisir manuellement
+      </button>
+    </div>
+
+    <!-- STEP 3 : CAMERA SCANNING -->
+    <div class="step" id="step-camera">
+      <div class="viewfinder-wrap">
+        <video id="camera-video" autoplay playsinline muted></video>
+        <canvas id="camera-canvas"></canvas>
+        <div class="scan-overlay">
+          <div class="scan-frame">
+            <div class="corner-br"></div>
+            <div class="corner-bl"></div>
+          </div>
+        </div>
+        <div class="scan-laser"></div>
+      </div>
+      <p class="cam-hint">Centrez le QR code dans le cadre</p>
+      <button class="btn btn-danger" id="btn-stop-cam">
+        ✕ &nbsp;Arrêter la caméra
+      </button>
+    </div>
+
+    <!-- STEP 4 : MANUAL INPUT -->
+    <div class="step" id="step-manual">
+      <div class="input-group">
+        <label>Code QR (affiché au tableau)</label>
+        <div class="input-row">
+          <input type="text" id="manual-code" placeholder="ex: A3F7-K2P9-..." maxlength="64"
+                 autocomplete="off" autocorrect="off" spellcheck="false"/>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btn-manual-back">← Retour</button>
+        <button class="btn btn-primary"   id="btn-manual-submit">Valider</button>
+      </div>
+    </div>
+
+    <!-- STEP 5 : PROCESSING -->
+    <div class="step" id="step-loading">
+      <div class="idle-icon" style="font-size:28px">⏳</div>
+      <div class="idle-text">
+        <h2>Vérification en cours…</h2>
+        <p>Validation de la session et enregistrement de votre présence.</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px">
+        <div class="spinner"></div> Connexion à Supabase…
+      </div>
+    </div>
+
+    <!-- STEP 6 : SUCCESS -->
+    <div class="step" id="step-success">
+      <div class="success-anim">✓</div>
+      <div class="success-info">
+        <h2>Présence enregistrée !</h2>
+        <p id="success-time"></p>
+      </div>
+      <div class="attendance-detail" id="attendance-detail"></div>
+      <button class="btn btn-secondary" id="btn-restart">
+        ↩ Nouveau scan
+      </button>
+    </div>
+
+    <!-- STEP 7 : ERROR -->
+    <div class="step" id="step-error">
+      <div class="idle-icon" style="font-size:30px">⚠️</div>
+      <div class="idle-text">
+        <h2 id="err-title">Une erreur est survenue</h2>
+        <p id="err-msg" style="color:var(--muted);font-size:13px;margin-top:6px"></p>
+      </div>
+      <button class="btn btn-primary" id="btn-retry">↩ Réessayer</button>
+    </div>
+
+  </div><!-- /card-body -->
+</div><!-- /card -->
+
+<script>
+// ════════════════════════════════════════════════════════════
+// ⚙️  CONFIGURATION SUPABASE
+// ════════════════════════════════════════════════════════════
+const SUPABASE_URL    = 'https://iyshoegwxmjvpdlpwoap.supabase.co';
+const SUPABASE_ANON   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2hvZWd3eG1qdnBkbHB3b2FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwNjQ3NzEsImV4cCI6MjA4NjY0MDc3MX0._1fw6MkgPusdRrprLjWc5KvAI5V6Z_Th_FHkvA_uvWA';
+
+// ════════════════════════════════════════════════════════════
+// 🔒  SÉCURITÉ — rate-limiting côté client (protection brute-force)
+// ════════════════════════════════════════════════════════════
+const RATE_LIMIT = { max: 5, window: 60_000 }; // 5 tentatives / 60 secondes
+let attempts = [];
+
+function isRateLimited() {
+  const now = Date.now();
+  attempts = attempts.filter(t => now - t < RATE_LIMIT.window);
+  if (attempts.length >= RATE_LIMIT.max) return true;
+  attempts.push(now);
+  return false;
+}
+
+// ════════════════════════════════════════════════════════════
+// 🔑  Supabase client
+// ════════════════════════════════════════════════════════════
+const { createClient } = window.supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ════════════════════════════════════════════════════════════
+// 📱  Détection appareil
+// ════════════════════════════════════════════════════════════
+const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
+              || ('ontouchstart' in window);
+// La caméra n'est disponible que sur mobile
+const hasCamera = isMobile && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+
+// ════════════════════════════════════════════════════════════
+// 🎯  State machine
+// ════════════════════════════════════════════════════════════
+let currentStep   = 'idle';
+let videoStream   = null;
+let scanInterval  = null;
+let lastScannedQR = null;
+
+const steps = ['idle','perm','camera','manual','loading','success','error'];
+
+function goTo(step) {
+  steps.forEach(s => {
+    const el = document.getElementById('step-' + s);
+    if (el) el.classList.toggle('active', s === step);
+  });
+  currentStep = step;
+}
+
+function showStatus(type, icon, msg) {
+  const box = document.getElementById('status-box');
+  box.className = 'status-box visible ' + type;
+  document.getElementById('status-icon').textContent = icon;
+  document.getElementById('status-msg').textContent  = msg;
+}
+function clearStatus() {
+  document.getElementById('status-box').className = 'status-box';
+}
+
+// ════════════════════════════════════════════════════════════
+// 🏠  INIT
+// ════════════════════════════════════════════════════════════
+(function init() {
+  // Badge device
+  const wrap = document.getElementById('device-badge-wrap');
+  wrap.innerHTML = `<span class="device-badge">
+    ${isMobile ? '📱 Appareil mobile' : '💻 Ordinateur de bureau'}
+  </span>`;
+
+  // Sur PC: afficher directement la saisie manuelle et masquer le bouton caméra
+  if (!isMobile) {
+    document.getElementById('btn-open-cam').style.display = 'none';
+    document.getElementById('btn-open-manual').textContent = '⌨️ \u00a0Entrer le code';
+  } else {
+    // Sur mobile: afficher le bouton caméra si disponible
+    const btnCam = document.getElementById('btn-open-cam');
+    if (hasCamera) {
+      btnCam.style.display = 'flex';
+    }
+  }
+
+  // Auto-traitement si le code est dans l'URL (?code=xxx)
+  const urlCode = new URLSearchParams(window.location.search).get('code');
+  if (urlCode) {
+    setTimeout(() => processQRCode(urlCode.trim().toLowerCase()), 300);
+  }
+})();
+
+// ════════════════════════════════════════════════════════════
+// 📷  CAMÉRA
+// ════════════════════════════════════════════════════════════
+document.getElementById('btn-open-cam').addEventListener('click', () => {
+  goTo('perm');
+  clearStatus();
+});
+
+document.getElementById('btn-request-cam').addEventListener('click', requestCamera);
+document.getElementById('btn-perm-skip').addEventListener('click', () => {
+  goTo('manual'); clearStatus();
+});
+
+async function requestCamera() {
+  try {
+    showStatus('info', '⏳', 'Demande d\'autorisation en cours…');
+
+    const constraints = {
+      video: {
+        facingMode: 'environment',  // Toujours caméra arrière pour mobile
+        width:  { ideal: 1280 },
+        height: { ideal: 720  },
+      }
+    };
+
+    videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+    const video = document.getElementById('camera-video');
+    video.srcObject = videoStream;
+    await video.play();
+
+    clearStatus();
+    goTo('camera');
+    startQRScan();
+
+  } catch (err) {
+    if (err.name === 'NotAllowedError') {
+      showStatus('warn', '🚫',
+        'Permission refusée. Vous pouvez saisir le code manuellement.');
+    } else {
+      showStatus('error', '❌', 'Impossible d\'accéder à la caméra : ' + err.message);
+    }
+    // Fallback to manual after 1.5s
+    setTimeout(() => { goTo('manual'); clearStatus(); }, 1800);
+  }
+}
+
+function startQRScan() {
+  const video  = document.getElementById('camera-video');
+  const canvas = document.getElementById('camera-canvas');
+  const ctx    = canvas.getContext('2d', { willReadFrequently: true });
+
+  scanInterval = setInterval(() => {
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, canvas.width, canvas.height, {
+      inversionAttempts: 'dontInvert'
+    });
+
+    if (code && code.data && code.data !== lastScannedQR) {
+      lastScannedQR = code.data;
+      stopCamera();
+      processQRCode(code.data.trim());
+    }
+  }, 250); // scan 4× / seconde
+}
+
+function stopCamera() {
+  clearInterval(scanInterval);
+  if (videoStream) {
+    videoStream.getTracks().forEach(t => t.stop());
+    videoStream = null;
+  }
+}
+
+document.getElementById('btn-stop-cam').addEventListener('click', () => {
+  stopCamera();
+  lastScannedQR = null;
+  goTo('idle');
+  clearStatus();
+});
+
+// ════════════════════════════════════════════════════════════
+// ⌨️  SAISIE MANUELLE
+// ════════════════════════════════════════════════════════════
+document.getElementById('btn-open-manual').addEventListener('click', () => {
+  goTo('manual'); clearStatus();
+});
+document.getElementById('btn-manual-back').addEventListener('click', () => {
+  goTo('idle'); clearStatus();
+  document.getElementById('manual-code').value = '';
+});
+
+document.getElementById('btn-manual-submit').addEventListener('click', () => {
+  const code = document.getElementById('manual-code').value.trim();
+  if (!code) {
+    showStatus('warn', '⚠️', 'Veuillez saisir un code avant de valider.');
+    return;
+  }
+  processQRCode(code);
+});
+
+// Valider sur Enter
+document.getElementById('manual-code').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-manual-submit').click();
+});
+
+// ════════════════════════════════════════════════════════════
+// 🔐  TRAITEMENT SÉCURISÉ DU QR CODE
+// ════════════════════════════════════════════════════════════
+async function processQRCode(qrValue) {
+  clearStatus();
+
+  // 1. Rate limiting côté client
+  if (isRateLimited()) {
+    showError(
+      'Trop de tentatives',
+      'Vous avez effectué trop de tentatives. Veuillez patienter 1 minute.'
+    );
+    return;
+  }
+
+  // 2. Validation basique du format (pas de payload suspicieux)
+  if (!isValidQRFormat(qrValue)) {
+    showError('Code invalide', 'Le format du code QR est incorrect ou corrompu.');
+    return;
+  }
+
+  goTo('loading');
+
+  try {
+    // 3. Récupérer l'étudiant depuis localStorage (auth custom)
+    const userData = JSON.parse(localStorage.getItem('attendly_user') || 'null');
+    if (!userData || userData.role !== 'student') {
+      showError('Non connecté', 'Vous devez être connecté à l\'application pour pointer votre présence.');
+      return;
+    }
+    const student = { id: userData.id, full_name: userData.full_name, grade: userData.grade };
+
+    // 5. Vérifier la session via le qr_code
+    const now = new Date().toISOString();
+
+    // D'abord chercher sans filtre d'expiration pour distinguer les cas
+    const { data: sessionRaw, error: sessRawError } = await db
+      .from('sessions')
+      .select('id, subject, grade, session_date, start_time, end_time, qr_expires_at, is_active')
+      .eq('qr_code', qrValue)
+      .maybeSingle();
+
+    if (sessRawError) throw sessRawError;
+
+    if (!sessionRaw) {
+      showError('Code introuvable', 'Ce code QR ne correspond à aucune session. Vérifiez le code saisi.');
+      return;
+    }
+    if (!sessionRaw.is_active) {
+      showError('Session terminée', 'Cette session a été clôturée par le professeur.');
+      return;
+    }
+    if (sessionRaw.qr_expires_at < now) {
+      const expAt = new Date(sessionRaw.qr_expires_at);
+      const expStr = expAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      showError('QR Code expiré', `Ce code QR a expiré à ${expStr}. Demandez au professeur d'en générer un nouveau.`);
+      return;
+    }
+    const session = sessionRaw;
+
+    // 6. Vérifier que l'étudiant est dans la bonne promotion
+    if (session.grade !== student.grade) {
+      showError(
+        'Accès refusé',
+        `Cette session est réservée à la promotion ${session.grade}. Votre promotion : ${student.grade}.`
+      );
+      return;
+    }
+
+    // 7. Vérifier si déjà présent avant d'insérer
+    const { data: existing } = await db
+      .from('attendance')
+      .select('id, marked_at')
+      .eq('student_id', student.id)
+      .eq('session_id', session.id)
+      .maybeSingle();
+
+    if (existing) {
+      const t = new Date(existing.marked_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      showError('Déjà enregistré ✓', `Vous avez déjà été enregistré présent(e) à ${t} pour cette session.`);
+      return;
+    }
+
+    // 8. Insérer la présence
+    const { data: attendance, error: attError } = await db
+      .from('attendance')
+      .insert({ student_id: student.id, session_id: session.id })
+      .select()
+      .single();
+
+    if (attError) {
+      if (attError.code === '23505') {
+        showError('Déjà enregistré ✓', 'Votre présence pour cette session a déjà été enregistrée.');
+      } else {
+        throw attError;
+      }
+      return;
+    }
+
+    // 9. Envoyer une notification à l'étudiant
+    const markedTime = new Date(attendance.marked_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    await db.from('notifications').insert({
+      student_id: student.id,
+      type: 'success',
+      message: `✅ Vous avez été enregistré(e) présent(e) en ${session.subject} le ${new Date(session.session_date).toLocaleDateString('fr-FR')} à ${markedTime}.`,
+      is_read: false
+    });
+
+    // 10. Succès 🎉
+    showSuccess(session, student, attendance);
+
+  } catch (err) {
+    console.error('[QR Scanner] Erreur inattendue:', err);
+    showError(
+      'Erreur serveur',
+      'Une erreur inattendue est survenue. Veuillez réessayer.'
+    );
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// ✅  Résultats
+// ════════════════════════════════════════════════════════════
+function showSuccess(session, student, attendance) {
+  const markedAt = new Date(attendance.marked_at);
+  const timeStr  = markedAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const dateStr  = markedAt.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  document.getElementById('success-time').textContent = `${dateStr} à ${timeStr}`;
+
+  document.getElementById('attendance-detail').innerHTML = `
+    <div class="row"><span>Étudiant</span><span>${student.full_name || 'Vous'}</span></div>
+    <div class="row"><span>Matière</span><span>${session.subject}</span></div>
+    <div class="row"><span>Promotion</span><span>${formatGrade(session.grade)}</span></div>
+    <div class="row"><span>Créneau</span><span>${session.start_time.slice(0,5)} – ${session.end_time.slice(0,5)}</span></div>
+    <div class="row"><span>Heure de pointage</span><span>${timeStr}</span></div>
+  `;
+
+  // Update session badge
+  document.getElementById('badge-subject').textContent = session.subject;
+  document.getElementById('badge-grade').textContent   = formatGrade(session.grade);
+  document.getElementById('badge-time').textContent    =
+    `${session.start_time.slice(0,5)} – ${session.end_time.slice(0,5)}`;
+  document.getElementById('session-badge').classList.add('visible');
+
+  goTo('success');
+}
+
+function showError(title, msg) {
+  document.getElementById('err-title').textContent = title;
+  document.getElementById('err-msg').textContent   = msg;
+  goTo('error');
+}
+
+// ════════════════════════════════════════════════════════════
+// 🔄  Retry / Restart
+// ════════════════════════════════════════════════════════════
+document.getElementById('btn-retry').addEventListener('click', () => {
+  lastScannedQR = null;
+  document.getElementById('manual-code').value = '';
+  goTo('idle');
+  clearStatus();
+});
+
+document.getElementById('btn-restart').addEventListener('click', () => {
+  lastScannedQR = null;
+  document.getElementById('manual-code').value = '';
+  document.getElementById('session-badge').classList.remove('visible');
+  goTo('idle');
+  clearStatus();
+});
+
+// ════════════════════════════════════════════════════════════
+// 🛡️  Helpers sécurité
+// ════════════════════════════════════════════════════════════
+
+// Valide que le QR ne contient que des caractères attendus
+// et une longueur raisonnable
+function isValidQRFormat(value) {
+  if (!value || typeof value !== 'string') return false;
+  if (value.length < 6 || value.length > 128) return false;
+  // Autorise alphanumériques, tirets, underscores, points
+  return /^[a-zA-Z0-9\-_.]+$/.test(value);
+}
+
+function formatGrade(g) {
+  const map = {
+    licence_info_1: 'Licence Info 1',
+    licence_info_2: 'Licence Info 2',
+    licence_info_3: 'Licence Info 3',
+  };
+  return map[g] || g;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISIMM | Espace Etudiant</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body id="pageBody" class="curtains-closed">
+     
+
+    <div class="curtain curtain-left">
+        <img src="assets/logo-universite-monastir.png" alt="Logo Université de Monastir" class="top-left-logo">
+    </div>
+    <div class="curtain curtain-right">
+        <img src="assets/logo-isimm.png" alt="Logo ISIMM" class="top-right-logo">
+    </div>
+    <div class="auth-container">
+        
+        <div id="loginForm" class="form-box active">
+            <h2>CONNEXION</h2>
+            <input type="email" id="loginEmail" placeholder="Adresse e-mail">
+            <input type="password" id="loginPassword" placeholder="Mot de passe">
+            
+            <button class="btn submit-btn" onclick="handleLogin(this)">
+                <span class="btn-text">Se Connecter</span>
+                <div class="spinner"></div>
+            </button>
+            
+            <div class="switch-text">
+                Nouveau ici ? <span class="switch-link" onclick="toggleForms('signup')">Créer un compte</span>
+            </div>
+        </div>
+
+       <div id="signupFormStep1" class="form-box">
+            <h2>INSCRIPTION</h2>
+            <p class="form-description">Entrez votre numéro CIN</p>
+            
+            <input type="text" id="signupCIN" placeholder="CIN (8 chiffres)" maxlength="8">
+            
+            <button class="btn submit-btn" onclick="checkCIN(this)">
+                <span class="btn-text">Continuer</span>
+                <div class="spinner"></div>
+            </button>
+            
+            <div class="switch-text">
+                Vous avez déjà un compte ? <span class="switch-link" onclick="toggleForms('login')">Se connecter</span>
+            </div>
+        </div>
+
+        <div id="signupFormStep2" class="form-box">
+            <h2>INSCRIPTION</h2>
+            <p class="form-description">Complétez vos informations</p>
+            
+            <!-- affichage de l'email -->
+            <div class="info-field">
+                <label>Votre email</label>
+                <span id="displayEmail">...</span>
+            </div>
+            
+            <input type="password" id="signupPassword" placeholder="Mot de passe (min. 8 caractères)">
+            <input type="password" id="signupPasswordConfirm" placeholder="Retapez le mot de passe">
+            
+            <select id="signupLevel" class="select-level">
+                <option value="" disabled selected>Choisissez votre niveau</option>
+                <option value="L1-info">L1-info</option>
+                <option value="L2-info">L2-info</option>
+                <option value="L3-info">L3-info</option>
+            </select>
+            <select id="signupTD" class="select-level">
+                <option value="" disabled selected>Choisissez votre groupe de TD</option>
+                <option value="TD1">TD1</option>
+                <option value="TD2">TD2</option>
+                <option value="TD3">TD3</option>
+                <option value="TD4">TD4</option>
+                <option value="TD5">TD5</option>
+                <option value="TD6">TD6</option>
+            </select>
+                        
+            <button class="btn submit-btn" onclick="handleSignup(this)">
+                <span class="btn-text">Créer le compte</span>
+                <div class="spinner"></div>
+            </button>
+            
+            <div class="switch-text">
+                <span class="switch-link" onclick="backToStep1()">Retour</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module" src="js/authE.js"></script>
+</body>
+
+</html>

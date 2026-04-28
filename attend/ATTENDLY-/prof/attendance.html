@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Présences — Prof</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="logo">
+          <img src="../assets/logo1.jpeg" alt="Attendly Logo">
+        </div>
+        <div class="brand-title">
+          <h2>Attendly</h2>
+          <p>Espace Professeur</p>
+        </div>
+      </div>
+      <div class="avatar-icon" onclick="window.location.href='profile.html'" title="Profil">
+        👨‍🏫
+      </div>
+    </div>
+
+    <nav>
+      <a href="emploi.html"><span class="icon"><i class="bi bi-calendar-week"></i></span>Emploi du temps</a>
+      <a href="attendance.html" class="active"><span class="icon"><i class="bi bi-clipboard-check"></i></span>Génération QR Code</a>
+      <a href="attendance-list.html"><span class="icon"><i class="bi bi-bar-chart"></i></span>Liste des présences</a>
+      <a href="notes.html"><span class="icon"><i class="bi bi-grid-3x3"></i></span>Notes</a>
+      <a href="profile.html"><span class="icon"><i class="bi bi-person"></i></span>Profil</a>
+      <a href="parametres.html"><span class="icon"><i class="bi bi-gear"></i></span>Paramètres</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <h1>Gestion des Présences</h1>
+      <p>Générer QR Code ou marquer manuellement</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('qr-tab', this)">QR Code</button>
+    </div>
+
+    <!-- QR Code Tab -->
+    <div id="qr-tab" class="tab-content active">
+      <div class="content-card">
+        <h2>Générer un QR Code pour la présence</h2>
+        <form id="qrForm" class="form-grid">
+          <div class="form-group">
+            <label for="qrGrade">Niveau</label>
+            <select id="qrGrade" required>
+              <option value="">Sélectionner...</option>
+              <option value="licence_info_1">Licence Info 1</option>
+              <option value="licence_info_2">Licence Info 2</option>
+              <option value="licence_info_3">Licence Info 3</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="qrSubject">Matière</label>
+            <input type="text" id="qrSubject" placeholder="Ex: Programmation Web" required>
+          </div>
+          <div class="form-group">
+            <label for="qrDate">Date</label>
+            <input type="date" id="qrDate" required>
+          </div>
+          <div class="form-group">
+            <label for="qrStartTime">Heure de début</label>
+            <input type="time" id="qrStartTime" required>
+          </div>
+          <div class="form-group">
+            <label for="qrEndTime">Heure de fin</label>
+            <input type="time" id="qrEndTime" required>
+          </div>
+          <div class="form-group">
+            <label for="qrDuration">Durée du QR (minutes)</label>
+            <input type="number" id="qrDuration" value="15" min="5" max="120">
+          </div>
+        </form>
+        <button type="button" class="btn-primary" onclick="generateQRCode()">
+          <i class="bi bi-qr-code"></i> Générer le QR Code
+        </button>
+      </div>
+
+      <div id="qrDisplay" class="content-card qr-display hidden">
+        <h3>QR Code de présence</h3>
+        <div id="qrcode"></div>
+        <!-- CODE TEXTE CORRESPONDANT AU QR -->
+      <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+  <p style="font-weight: 600; margin-bottom: 0.5rem;">🔑 Code à saisir manuellement :</p>
+  <div style="background: #f1f5f9; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.95rem; word-break: break-all; margin-bottom: 0.75rem; text-align: center; letter-spacing: 1px;" id="qrTextCode">
+    —
+  </div>
+  <p style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">
+    Les étudiants peuvent scanner le QR ou saisir ce code manuellement.
+  </p>
+</div>
+        <div class="qr-info">
+          <p id="qrExpires"></p>
+          <p id="qrCountdown" style="font-size: 1.2rem; font-weight: bold; color: #ef4444;"></p>
+          <p>Scannez ce code pour marquer votre présence</p>
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="downloadQR()">
+            <i class="bi bi-download"></i> Télécharger
+          </button>
+          <button class="btn-secondary" onclick="closeQRDisplay()">
+            <i class="bi bi-x-lg"></i> Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script type="module" src="js/app.js"></script>
+<script type="module">
+  import { createSession, getCurrentUser, getProfessorSessions, deactivateSession } from '../js/database.js';
+  
+  let currentSessionId = null;
+  let qrCodeObj = null;
+  let countdownInterval = null;
+
+  // Countdown timer for QR code - calcul réel de la différence
+  function startCountdown(expiresAt) {
+    const countdownEl = document.getElementById('qrCountdown');
+    
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+    }
+    
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const expiration = new Date(expiresAt).getTime();
+      const diff = expiration - now;
+      
+      if (diff <= 0) {
+        countdownEl.textContent = 'QR Code expiré';
+        countdownEl.style.color = '#6b7280';
+        clearInterval(countdownInterval);
+        return;
+      }
+      
+      const minutes = Math.floor(diff / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      countdownEl.textContent = `Temps restant: ${minutes}m ${seconds}s`;
+      
+      if (minutes < 2) {
+        countdownEl.style.color = '#ef4444'; // Red when < 2 min
+      } else if (minutes < 5) {
+        countdownEl.style.color = '#f59e0b'; // Orange when < 5 min
+      } else {
+        countdownEl.style.color = '#22c55e'; // Green otherwise
+      }
+    }
+    
+    updateCountdown();
+    countdownInterval = setInterval(updateCountdown, 1000);
+  }
+  
+  // Override the generateQRCode function to use database.js
+  window.generateQRCode = async function() {
+    const user = getCurrentUser();
+    if (!user) {
+      alert('Veuillez vous connecter');
+      return;
+    }
+    
+    const grade = document.getElementById('qrGrade').value;
+    const subject = document.getElementById('qrSubject').value;
+    const sessionDate = document.getElementById('qrDate').value;
+    const startTime = document.getElementById('qrStartTime').value;
+    const endTime = document.getElementById('qrEndTime').value;
+    const duration = parseInt(document.getElementById('qrDuration').value) || 15;
+    
+    if (!grade || !subject || !sessionDate || !startTime || !endTime) {
+      alert('Veuillez remplir tous les champs');
+      return;
+    }
+    
+    const sessionData = {
+      professorId: user.id,
+      grade: grade,
+      subject: subject,
+      sessionDate: sessionDate,
+      startTime: startTime + ':00',
+      endTime: endTime + ':00'
+    };
+    
+    const result = await createSession(sessionData, duration);
+    
+    if (result.success) {
+      currentSessionId = result.data.id;
+      
+      // Generate visual QR code using QRCode.js library
+      const qrContainer = document.getElementById('qrcode');
+      qrContainer.innerHTML = '';
+      qrCodeObj = new QRCode(qrContainer, {
+        text: result.data.qr_code,
+        width: 200,
+        height: 200,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      
+      // Afficher le code texte correspondant au QR
+      const codeText = result.data.qr_display_code || result.data.qr_code;
+      document.getElementById('qrTextCode').textContent = codeText;
+
+      // Show expiration time
+      const expiresAt = new Date(result.data.qr_expires_at);
+      
+      // Debug: log pour vérifier le calcul
+      console.log('Début séance:', sessionDate, startTime);
+      console.log('Durée QR:', duration, 'minutes');
+      console.log('Expiration calculée:', expiresAt.toLocaleString('fr-FR'));
+      
+      document.getElementById('qrExpires').textContent =
+        'Expire le: ' + expiresAt.toLocaleString('fr-FR');
+      
+      // Start countdown timer
+      startCountdown(result.data.qr_expires_at);
+      
+      // Show the QR display section
+      document.getElementById('qrDisplay').classList.remove('hidden');
+      
+      // Store session info for download
+      qrCodeObj.sessionInfo = result.data;
+    } else {
+      alert('Erreur lors de la création de la session: ' + result.error);
+    }
+  };
+  
+  window.closeQRDisplay = function() {
+    document.getElementById('qrDisplay').classList.add('hidden');
+    document.getElementById('qrcode').innerHTML = '';
+    
+    // Stop countdown
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+    
+    // Optionally deactivate the session when closing
+    if (currentSessionId) {
+      deactivateSession(currentSessionId);
+      currentSessionId = null;
+    }
+  };
+  
+  window.downloadQR = function() {
+    const qrCanvas = document.querySelector('#qrcode canvas');
+    if (qrCanvas) {
+      const link = document.createElement('a');
+      link.download = 'qr-code-session.png';
+      link.href = qrCanvas.toDataURL();
+      link.click();
+    }
+  };
+  
+  // Set default date to today
+  document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('qrDate').value = today;
+  });
+</script>
+</body>
+</html>

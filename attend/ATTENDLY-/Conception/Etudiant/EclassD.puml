@@ -1,0 +1,147 @@
+@startuml
+skinparam class {
+  BackgroundColor White
+  BorderColor Navy
+  ArrowColor Navy
+  AttributeFontName Arial
+  MethodFontName Arial
+}
+
+skinparam note {
+  BackgroundColor LightYellow
+  BorderColor Orange
+}
+
+class "Étudiant" as Etudiant {
+  -id: UUID
+  -nom: String
+  -prenom: String
+  -email: String
+  -motDePasse: String (hashé)
+  -dateNaissance: Date
+  -numeroInscription: String
+  -filiere: String
+  -niveau: String
+  +sAuthentifier(email, mdp): Boolean
+  +sInscrire(data): Boolean
+  +seDeconnecter(): void
+  +consulterEmploi(): List<Cours>
+  +consulterNotes(): List<Note>
+  +marquerPresence(qrCode): Boolean
+  +recupererMotDePasse(email): Boolean
+}
+
+class "EmploiDuTemps" as Emploi {
+  -id: UUID
+  -etudiantId: UUID
+  -listeCours: List<Cours>
+  +ajouterCours(cours): void
+  +supprimerCours(coursId): void
+  +modifierCours(cours): void
+  +getEmploiSemaine(): List<Cours>
+  +getEmploiJour(date): List<Cours>
+}
+
+class "Cours" as Cours {
+  -id: UUID
+  -titre: String
+  -codeMatiere: String
+  -enseignant: String
+  -salle: String
+  -jourSemaine: DayOfWeek
+  -heureDebut: Time
+  -heureFin: Time
+  -duree: Duration
+  +getDetails(): String
+  +estEnCours(): Boolean
+}
+
+class "Note" as Note {
+  -id: UUID
+  -etudiantId: UUID
+  -coursId: UUID
+  -matiere: String
+  -valeur: Float
+  -coefficient: Integer
+  -semestre: String
+  -anneeUniversitaire: String
+  -dateEvaluation: Date
+  -typeEvaluation: String
+  +getMoyenne(): Float
+  +estValide(): Boolean
+}
+
+class "Presence" as Presence {
+  -id: UUID
+  -etudiantId: UUID
+  -coursId: UUID
+  -date: DateTime
+  -heureArrivee: Time
+  -statut: StatutPresence
+  -qrCodeId: UUID
+  +marquerArrivee(): void
+  +marquerSortie(): void
+  +verifierRetard(): Boolean
+}
+
+class "QRCode" as QRCode {
+  -id: UUID
+  -coursId: UUID
+  -dateGeneration: DateTime
+  -dateExpiration: DateTime
+  -contenu: String
+  -estValide: Boolean
+  +genererQRCode(): String
+  +validerQRCode(): Boolean
+  +expireQRCode(): void
+}
+
+class "Session" as Session {
+  -id: UUID
+  -etudiantId: UUID
+  -token: String
+  -dateCreation: DateTime
+  -dateExpiration: DateTime
+  -estActive: Boolean
+  +creerToken(): String
+  +validerToken(token): Boolean
+  +invaliderSession(): void
+}
+
+class "StatutPresence" as Statut {
+  <<enumeration>>
+  PRESENT
+  ABSENT
+  RETARD
+  EXCUSE
+}
+
+' Relations
+Etudiant "1" -- "1" Emploi : possède
+Etudiant "1" -- "*" Note : obtient
+Etudiant "1" -- "*" Presence : effectue
+Emploi "1" -- "*" Cours : contient
+Presence "*" -- "1" Cours : concerne
+Presence "*" -- "1" QRCode : utilise
+Etudiant "1" -- "*" Session : possède
+Note "*" -- "1" Cours : évalue
+
+note top of Etudiant
+  Entité principale
+  Authentification requise
+  pour accéder aux données
+end note
+
+note right of QRCode
+  Code généré pour chaque cours
+  Validité limitée dans le temps
+  (ex: 15 minutes)
+end note
+
+note bottom of Presence
+  Enregistrement automatique
+  via scan QR Code
+  avec horodatage
+end note
+
+@enduml

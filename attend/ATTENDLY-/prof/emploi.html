@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emploi du temps — Prof</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="logo">
+          <img src="../assets/logo1.jpeg" alt="Attendly Logo">
+        </div>
+        <div class="brand-title">
+          <h2>Attendly</h2>
+          <p>Espace Professeur</p>
+        </div>
+      </div>
+      <div class="avatar-icon" onclick="window.location.href='profile.html'" title="Profil">
+        👨‍🏫
+      </div>
+    </div>
+
+    <nav>
+      <a href="emploi.html" class="active"><span class="icon"><i class="bi bi-calendar-week"></i></span>Emploi du temps</a>
+      <a href="attendance.html"><span class="icon"><i class="bi bi-clipboard-check"></i></span>Génération QR Code</a>
+      <a href="attendance-list.html"><span class="icon"><i class="bi bi-bar-chart"></i></span>Liste des présences</a>
+      <a href="notes.html"><span class="icon"><i class="bi bi-grid-3x3"></i></span>Notes</a>
+      <a href="profile.html"><span class="icon"><i class="bi bi-person"></i></span>Profil</a>
+      <a href="parametres.html"><span class="icon"><i class="bi bi-gear"></i></span>Paramètres</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <h1>Emploi du temps</h1>
+      <p>date</p>
+    </div>
+
+    <div class="content-card">
+      <div id="timetableContainer">
+        <!-- Static timetable grid — JS will populate course cells from Supabase -->
+        <div class="timetable-wrapper">
+          <div class="timetable" style="grid-template-columns: 80px repeat(6, 1fr)">
+            <!-- Header row -->
+            <div class="tt-head"></div>
+            <div class="tt-head" data-day="lundi">Lundi</div>
+            <div class="tt-head" data-day="mardi">Mardi</div>
+            <div class="tt-head" data-day="mercredi">Mercredi</div>
+            <div class="tt-head" data-day="jeudi">Jeudi</div>
+            <div class="tt-head" data-day="vendredi">Vendredi</div>
+            <div class="tt-head" data-day="samedi">Samedi</div>
+
+            <!-- 08:00 - 10:30 -->
+            <div class="tt-time">08:30 - 10:00</div>
+            <div class="tt-cell" data-day="lundi" data-start="08:30"></div>
+            <div class="tt-cell" data-day="mardi" data-start="08:30"></div>
+            <div class="tt-cell" data-day="mercredi" data-start="08:30"></div>
+            <div class="tt-cell" data-day="jeudi" data-start="08:30"></div>
+            <div class="tt-cell" data-day="vendredi" data-start="08:30"></div>
+            <div class="tt-cell" data-day="samedi" data-start="08:00"></div>
+
+            <!-- 10:15 - 11:45 -->
+            <div class="tt-time">10:15 - 11:45</div>
+            <div class="tt-cell" data-day="lundi" data-start="10:15"></div>
+            <div class="tt-cell" data-day="mardi" data-start="10:15"></div>
+            <div class="tt-cell" data-day="mercredi" data-start="10:15"></div>
+            <div class="tt-cell" data-day="jeudi" data-start="10:15"></div>
+            <div class="tt-cell" data-day="vendredi" data-start="10:15"></div>
+            <div class="tt-cell" data-day="samedi" data-start="10:30"></div>
+
+            <!-- 11:45 - 13:00 (Pause) -->
+            <div class="tt-time">11:45 - 13:00</div>
+            <div class="tt-cell" data-day="lundi" data-start="11:45"></div>
+            <div class="tt-cell" data-day="mardi" data-start="11:45"></div>
+            <div class="tt-cell" data-day="mercredi" data-start="11:45"></div>
+            <div class="tt-cell" data-day="jeudi" data-start="11:45"></div>
+            <div class="tt-cell" data-day="vendredi" data-start="11:45"></div>
+            <div class="tt-cell" data-day="samedi" data-start="11:45"></div>
+
+            <!-- 13:00 - 14:30  -->
+            <div class="tt-time">13:00 - 14:30</div>
+            <div class="tt-cell" data-day="lundi" data-start="13:00"></div>
+            <div class="tt-cell" data-day="mardi" data-start="13:00"></div>
+            <div class="tt-cell" data-day="mercredi" data-start="13:00"></div>
+            <div class="tt-cell" data-day="jeudi" data-start="13:30"></div>
+            <div class="tt-cell" data-day="vendredi" data-start="13:30"></div>
+            <div class="tt-cell" data-day="samedi" data-start="13:30"></div>
+
+            <!-- 14:45 - 16:15 -->
+            <div class="tt-time">14:45 - 16:15</div>
+            <div class="tt-cell" data-day="lundi" data-start="14:45"></div>
+            <div class="tt-cell" data-day="mardi" data-start="14:45"></div>
+            <div class="tt-cell" data-day="mercredi" data-start="14:45"></div>
+            <div class="tt-cell" data-day="jeudi" data-start="14:45"></div>
+            <div class="tt-cell" data-day="vendredi" data-start="14:45"></div>
+            <div class="tt-cell" data-day="samedi" data-start="14:45"></div>
+
+            <!-- 16:30 - 18:00 -->
+            <div class="tt-time">16:30 - 18:00</div>
+            <div class="tt-cell" data-day="lundi" data-start="16:30"></div>
+            <div class="tt-cell" data-day="mardi" data-start="16:30"></div>
+            <div class="tt-cell" data-day="mercredi" data-start="16:30"></div>
+            <div class="tt-cell" data-day="jeudi" data-start="16:30"></div>
+            <div class="tt-cell" data-day="vendredi" data-start="16:30"></div>
+            <div class="tt-cell" data-day="samedi" data-start="16:30"></div>          </div>
+        </div>
+      </div>
+      <div class="empty-state" id="emptyTimetable" style="display:none;">
+        <div class="empty-icon">📅</div>
+        <p>Aucun emploi du temps disponible</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- QR Modal -->
+<div class="modal-overlay" id="qrModal">
+  <div class="modal-box">
+    <h3>Marquer la présence</h3>
+    <p style="margin-bottom:12px;color:#64748b;font-size:0.88rem;">Entrez le code QR fourni par votre enseignant.</p>
+    <div class="form-group">
+      <input type="text" id="qrInput" placeholder="Code QR de la session">
+    </div>
+    <button class="btn-primary" onclick="submitQR()" style="width:100%;margin-bottom:12px;">Valider la présence</button>
+    <p id="qrMessage" style="margin-bottom:12px;font-size:0.88rem;text-align:center;"></p>
+    <button class="btn-close-modal" onclick="closeQR()">Fermer</button>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+<script type="module">
+  import { getProfessorSchedule, getCurrentUser } from '../js/database.js';
+  
+  // Load professor schedule on page load
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Update current date first
+    updateCurrentDate();
+    
+    const user = getCurrentUser();
+    if (!user) {
+      console.error('No user logged in');
+      return;
+    }
+    
+    const result = await getProfessorSchedule(user.id);
+    if (result.success) {
+      populateSchedule(result.data);
+    } else {
+      console.error('Error loading schedule:', result.error);
+      document.getElementById('timetableContainer').innerHTML = 
+        '<div class="content-card" style="text-align:center;padding:40px;color:#64748b;">' +
+        '<i class="bi bi-calendar-x" style="font-size:3rem;margin-bottom:16px;display:block;"></i>' +
+        '<p>Aucun emploi du temps trouvé.</p>' +
+        '</div>';
+    }
+  });
+  
+  function populateSchedule(schedules) {
+    if (!schedules || schedules.length === 0) {
+      document.getElementById('timetableContainer').innerHTML = 
+        '<div class="content-card" style="text-align:center;padding:40px;color:#64748b;">' +
+        '<i class="bi bi-calendar-x" style="font-size:3rem;margin-bottom:16px;display:block;"></i>' +
+        '<p>Aucun cours programmé.</p>' +
+        '</div>';
+      return;
+    }
+    
+    // Group schedules by day
+    const daysMap = {
+      'lundi': [], 'mardi': [], 'mercredi': [], 
+      'jeudi': [], 'vendredi': [], 'samedi': []
+    };
+    
+    schedules.forEach(schedule => {
+      const day = schedule.day_of_week.toLowerCase();
+      if (daysMap[day]) {
+        daysMap[day].push(schedule);
+      }
+    });
+    
+    // Populate each cell with course info
+    Object.keys(daysMap).forEach(day => {
+      const daySchedules = daysMap[day];
+      daySchedules.forEach(schedule => {
+        const startTime = schedule.start_time.substring(0, 5);
+        const cell = document.querySelector(`.tt-cell[data-day="${day}"][data-start="${startTime}"]`);
+        if (cell) {
+          cell.innerHTML = `
+            <div class="course-block">
+              <strong>${schedule.subject}</strong>
+              <small>${schedule.grade}</small>
+              <small>Salle: ${schedule.room || 'N/A'}</small>
+              ${schedule.td_group ? `<small>Groupe: ${schedule.td_group}</small>` : ''}
+            </div>
+          `;
+          cell.classList.add('has-course');
+        }
+      });
+    });
+  }
+
+  // Update current date
+  function updateCurrentDate() {
+    const dateElement = document.querySelector('.page-header p');
+    if (dateElement) {
+      const now = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      dateElement.textContent = now.toLocaleDateString('fr-FR', options);
+    }
+  }
+</script>
+</body>
+</html>

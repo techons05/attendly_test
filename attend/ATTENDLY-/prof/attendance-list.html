@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matrice des Présences Annuelle — Prof</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="logo">
+          <img src="../assets/logo1.jpeg" alt="Attendly Logo">
+        </div>
+        <div class="brand-title">
+          <h2>Attendly</h2>
+          <p>Espace Professeur</p>
+        </div>
+      </div>
+      <div class="avatar-icon" onclick="window.location.href='profile.html'" title="Profil">
+        👨‍🏫
+      </div>
+    </div>
+
+    <nav>
+      <a href="emploi.html"><span class="icon"><i class="bi bi-calendar-week"></i></span>Emploi du temps</a>
+      <a href="attendance.html"><span class="icon"><i class="bi bi-clipboard-check"></i></span>Génération QR Code</a>
+      <a href="attendance-list.html" class="active"><span class="icon"><i class="bi bi-bar-chart"></i></span>Liste des présences</a>
+      <a href="notes.html"><span class="icon"><i class="bi bi-grid-3x3"></i></span>Notes</a>
+      <a href="profile.html"><span class="icon"><i class="bi bi-person"></i></span>Profil</a>
+      <a href="parametres.html"><span class="icon"><i class="bi bi-gear"></i></span>Paramètres</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <!-- Logout button available in profile and settings pages only -->
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="page-header">
+      <h1>Matrice des Présences Annuelle</h1>
+      <p>Vue d'ensemble des présences par étudiant et par date de session</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-card">
+      <div class="filters-row">
+        <div class="filter-group">
+          <label>Niveau</label>
+          <select id="filterGradeMatrix">
+            <option value="">Tous les niveaux</option>
+            <option value="1ere">1ère année</option>
+            <option value="2eme">2ème année</option>
+            <option value="3eme">3ème année</option>
+            <option value="4eme">4ème année</option>
+            <option value="5eme">5ème année</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Matière</label>
+          <input type="text" id="filterSubjectMatrix" placeholder="Filtrer par matière...">
+        </div>
+        <div class="filter-group">
+          <label>Du</label>
+          <input type="date" id="filterDateFrom">
+        </div>
+        <div class="filter-group">
+          <label>Au</label>
+          <input type="date" id="filterDateTo">
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-primary" onclick="loadYearlyAttendance()">
+            <i class="bi bi-search"></i> Filtrer
+          </button>
+          <button class="btn btn-success" onclick="saveMatrixChanges()">
+            <i class="bi bi-save"></i> Enregistrer
+          </button>
+          <button class="btn btn-secondary" onclick="exportMatrixToCSV()">
+            <i class="bi bi-download"></i> Export CSV
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend-bar">
+      <div class="legend-item">
+        <span class="legend-color present"></span>
+        <span>Présent</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color absent"></span>
+        <span>Absent</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color manual"></span>
+        <span>Modification manuelle</span>
+      </div>
+      <div class="legend-item">
+        <span class="pending-indicator">*</span>
+        <span>Modifications en attente</span>
+      </div>
+    </div>
+
+    <!-- Matrix Table -->
+    <div class="attendance-matrix-container">
+      <table class="attendance-matrix-table" id="attendanceMatrixTable">
+        <thead id="matrixHeader">
+          <tr>
+            <th class="student-col-header">Étudiant</th>
+            <th class="student-col-header">CIN</th>
+            <!-- Date columns will be added dynamically -->
+          </tr>
+        </thead>
+        <tbody id="matrixBody">
+          <tr>
+            <td colspan="2" class="text-center">Chargement...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<!-- Session Modal -->
+<div class="modal-overlay" id="sessionModal" onclick="closeSessionModal()">
+  <div class="modal modal-large" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="modalSubject">Détails de la session</h3>
+      <button class="btn-close" onclick="closeSessionModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="session-info">
+        <p><strong>Date:</strong> <span id="modalDate"></span></p>
+        <p><strong>Horaire:</strong> <span id="modalTime"></span></p>
+        <p><strong>Niveau:</strong> <span id="modalGrade"></span></p>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>CIN</th>
+            <th>Nom</th>
+            <th>Statut</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="modalAttendanceBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="js/app.js"></script>
+<script type="module">
+  import { getCurrentUser, getProfessorSessions, getSessionAttendance, formatDate } from '../js/database.js';
+  
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Set default date range (current school year)
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const startOfYear = now.getMonth() >= 8 ? `${currentYear}-09-01` : `${currentYear-1}-09-01`;
+    const endOfYear = now.getMonth() >= 8 ? `${currentYear+1}-06-30` : `${currentYear}-06-30`;
+    
+    if (document.getElementById('filterDateFrom')) {
+      document.getElementById('filterDateFrom').value = startOfYear;
+    }
+    if (document.getElementById('filterDateTo')) {
+      document.getElementById('filterDateTo').value = endOfYear;
+    }
+    
+    // Load professor sessions for the filter dropdown
+    await loadProfessorSessions();
+    
+    // Load attendance data
+    await loadYearlyAttendance();
+  });
+  
+  async function loadProfessorSessions() {
+    const user = getCurrentUser();
+    if (!user) return;
+    
+    const result = await getProfessorSessions(user.id);
+    if (result.success) {
+      // Could populate a session filter dropdown here if needed
+      console.log('Loaded', result.data.length, 'sessions');
+    }
+  }
+  
+  // Override the loadYearlyAttendance function to use database.js
+  window.loadYearlyAttendance = async function() {
+    const user = getCurrentUser();
+    if (!user) {
+      console.error('No user logged in');
+      return;
+    }
+    
+    const gradeFilter = document.getElementById('filterGradeMatrix')?.value || '';
+    const subjectFilter = document.getElementById('filterSubjectMatrix')?.value?.toLowerCase() || '';
+    const dateFrom = document.getElementById('filterDateFrom')?.value || '';
+    const dateTo = document.getElementById('filterDateTo')?.value || '';
+    
+    // Get all sessions for this professor
+    const result = await getProfessorSessions(user.id);
+    
+    if (!result.success) {
+      console.error('Error loading sessions:', result.error);
+      document.getElementById('matrixBody').innerHTML = 
+        '<tr><td colspan="2" class="text-center">Erreur de chargement</td></tr>';
+      return;
+    }
+    
+    let sessions = result.data;
+    
+    // Apply filters
+    if (gradeFilter) sessions = sessions.filter(s => s.grade === gradeFilter);
+    if (subjectFilter) sessions = sessions.filter(s => s.subject.toLowerCase().includes(subjectFilter));
+    if (dateFrom) sessions = sessions.filter(s => s.session_date >= dateFrom);
+    if (dateTo) sessions = sessions.filter(s => s.session_date <= dateTo);
+    
+    if (sessions.length === 0) {
+      document.getElementById('matrixBody').innerHTML = 
+        '<tr><td colspan="2" class="text-center">Aucune session trouvée</td></tr>';
+      return;
+    }
+    
+    // Get attendance for each session
+    const matrixData = [];
+    for (const session of sessions) {
+      const attendanceResult = await getSessionAttendance(session.id);
+      if (attendanceResult.success) {
+        matrixData.push({
+          session: session,
+          attendance: attendanceResult.data.attendance
+        });
+      }
+    }
+    
+    renderMatrix(matrixData);
+  };
+  
+  function renderMatrix(matrixData) {
+    // Sort sessions by date
+    matrixData.sort((a, b) => a.session.session_date.localeCompare(b.session.session_date));
+    
+    // Populate header with date columns
+    const headerRow = document.querySelector('#matrixHeader tr');
+    headerRow.innerHTML = `
+        <th class="student-col-header">Étudiant</th>
+        <th class="student-col-header">CIN</th>
+        ${matrixData.map(({session}) => `<th class="date-col">${formatDate(session.session_date)}</th>`).join('')}
+    `;
+    
+    const tbody = document.getElementById('matrixBody');
+    
+    if (matrixData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="2" class="text-center">Aucune donnée</td></tr>';
+      return;
+    }
+    
+    // Group by student
+    const studentsMap = new Map();
+    
+    matrixData.forEach(({ session, attendance }) => {
+      attendance.forEach(record => {
+        const student = record.students;
+        if (!studentsMap.has(student.id)) {
+          studentsMap.set(student.id, {
+            student: student,
+            attendances: []
+          });
+        }
+        studentsMap.get(student.id).attendances.push({
+          session: session,
+          date: session.session_date,
+          present: true
+        });
+      });
+    });
+    
+    // Render rows with clickable cells for manual attendance
+    let html = '';
+    studentsMap.forEach(({ student, attendances }) => {
+      html += `
+        <tr>
+          <td class="student-col">${student.full_name}</td>
+          <td class="student-col">${student.cin}</td>
+          ${matrixData.map(({ session }) => {
+            const wasPresent = attendances.some(a => a.session.id === session.id);
+            return `<td class="presence-cell ${wasPresent ? 'present' : 'absent'}" 
+                         onclick="toggleAttendance('${student.id}', '${session.id}', '${wasPresent ? 'present' : 'absent'}')"
+                         title="Cliquez pour modifier">
+                      ${wasPresent ? '✓' : '✗'}
+                    </td>`;
+          }).join('')}
+        </tr>
+      `;
+    });
+    
+    // Add legend
+    html += `
+      <tr class="legend-row">
+        <td colspan="2" style="text-align: right; padding: 12px; color: #64748b;">
+          Légende: 
+          <span style="color: #22c55e; font-weight: bold;">✓ Présent</span> | 
+          <span style="color: #ef4444; font-weight: bold;">✗ Absent</span> |
+          <small>Cliquez sur une cellule pour modifier</small>
+        </td>
+        ${matrixData.map(() => '<td></td>').join('')}
+      </tr>
+    `;
+    
+    tbody.innerHTML = html;
+  }
+  
+  // Toggle student attendance status manually
+  window.toggleAttendance = async function(studentId, sessionId, currentStatus) {
+    const user = getCurrentUser();
+    if (!user) {
+      alert('Veuillez vous connecter');
+      return;
+    }
+    
+    try {
+      if (currentStatus === 'present') {
+        // Remove attendance record (mark as absent)
+        const { error } = await supabase
+          .from('attendance')
+          .delete()
+          .eq('student_id', studentId)
+          .eq('session_id', sessionId);
+          
+        if (error) throw error;
+        showToast('Étudiant marqué comme absent', 'success');
+      } else {
+        // Add attendance record (mark as present)
+        const { error } = await supabase
+          .from('attendance')
+          .insert({
+            student_id: studentId,
+            session_id: sessionId,
+            marked_at: new Date().toISOString(),
+            method: 'manual'
+          });
+          
+        if (error) throw error;
+        showToast('Étudiant marqué comme présent', 'success');
+      }
+      
+      // Reload the matrix to reflect changes
+      await loadYearlyAttendance();
+    } catch (err) {
+      console.error('Error toggling attendance:', err);
+      showToast('Erreur: ' + err.message, 'error');
+    }
+  };
+
+  // Show toast notification
+  function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      z-index: 10000;
+      animation: slideIn 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    
+    if (type === 'success') toast.style.background = '#22c55e';
+    else if (type === 'error') toast.style.background = '#ef4444';
+    else toast.style.background = '#3b82f6';
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.animation = 'slideIn 0.3s ease reverse';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  // Save changes function
+  window.saveMatrixChanges = async function() {
+    alert('Les modifications sont sauvegardées automatiquement');
+  };
+  
+  // Export function
+  window.exportMatrixToCSV = function() {
+    alert('Fonction d\'export CSV à implémenter');
+  };
+  
+  // Session modal functions
+  window.openSessionModal = function(sessionId) {
+    alert('Voir les détails de la session: ' + sessionId);
+  };
+  
+  window.closeSessionModal = function() {
+    document.getElementById('sessionModal').style.display = 'none';
+  };
+</script>
+</body>
+</html>

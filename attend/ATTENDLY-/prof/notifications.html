@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications — Prof</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="logo">
+          <img src="../assets/logo1.jpeg" alt="Attendly Logo">
+        </div>
+        <div class="brand-title">
+          <h2>Attendly</h2>
+          <p>Espace Professeur</p>
+        </div>
+      </div>
+      <div class="avatar-icon" onclick="window.location.href='profile.html'" title="Profil">
+        👨‍🏫
+      </div>
+    </div>
+
+    <nav>
+      <a href="emploi.html"><span class="icon"><i class="bi bi-calendar-week"></i></span>Emploi du temps</a>
+      <a href="attendance.html"><span class="icon"><i class="bi bi-clipboard-check"></i></span>Génération QR Code</a>
+      <a href="attendance-list.html"><span class="icon"><i class="bi bi-bar-chart"></i></span>Liste des présences</a>
+      <a href="notes.html"><span class="icon"><i class="bi bi-grid-3x3"></i></span>Notes</a>
+      <a href="profile.html"><span class="icon"><i class="bi bi-person"></i></span>Profil</a>
+      <a href="parametres.html"><span class="icon"><i class="bi bi-gear"></i></span>Paramètres</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <h1>Notifications</h1>
+      <p>Restez informée des dernières mises à jour</p>
+    </div>
+
+    <div class="content-card">
+      <ul class="notif-list" id="notifList">
+        <!-- Data loaded from database -->
+      </ul>
+      <div class="empty-state" id="emptyNotifs">
+        <div class="empty-icon">🔔</div>
+        <p>Aucune notification</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- QR Modal -->
+<div class="modal-overlay" id="qrModal">
+  <div class="modal-box">
+    <h3>Marquer la présence</h3>
+    <p style="margin-bottom:12px;color:#64748b;font-size:0.88rem;">Entrez le code QR fourni par votre enseignant.</p>
+    <div class="form-group">
+      <input type="text" id="qrInput" placeholder="Code QR de la session">
+    </div>
+    <button class="btn-primary" onclick="submitQR()" style="width:100%;margin-bottom:12px;">Valider la présence</button>
+    <p id="qrMessage" style="margin-bottom:12px;font-size:0.88rem;text-align:center;"></p>
+    <button class="btn-close-modal" onclick="closeQR()">Fermer</button>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+<script type="module">
+  import { getCurrentUser, getProfessorProfile } from '../js/database.js';
+  
+  // Load notifications
+  document.addEventListener('DOMContentLoaded', async () => {
+    const user = getCurrentUser();
+    if (!user) {
+      document.getElementById('notifList').innerHTML = 
+        '<li class="notif-item"><p>Veuillez vous connecter</p></li>';
+      return;
+    }
+    
+    // Fetch professor profile for notifications
+    const result = await getProfessorProfile(user.id);
+    if (result.success) {
+      // For now, show welcome notification
+      const notifList = document.getElementById('notifList');
+      const emptyNotifs = document.getElementById('emptyNotifs');
+      
+      notifList.innerHTML = `
+        <li class="notif-item unread">
+          <div class="notif-icon">👋</div>
+          <div class="notif-content">
+            <p class="notif-title">Bienvenue sur Attendly!</p>
+            <p class="notif-desc">Bonjour ${result.data.full_name}, votre espace professeur est prêt.</p>
+            <span class="notif-time">À l'instant</span>
+          </div>
+        </li>
+      `;
+      emptyNotifs.style.display = 'none';
+    }
+  });
+</script>
+</body>
+</html>

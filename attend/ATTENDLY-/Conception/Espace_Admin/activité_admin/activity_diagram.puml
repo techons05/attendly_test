@@ -1,0 +1,36 @@
+@startuml
+
+start
+
+:Entrer email et mot de passe;
+
+if (Identifiants valides ?) then (Oui)
+
+  :Accéder au dashboard;
+
+  fork
+    :Gérer utilisateurs;
+  fork again
+    :Gérer matières;
+  fork again
+    :Gérer niveaux;
+  end fork
+
+  if (Consulter statistiques ?) then (Oui)
+    :Consulter statistiques;
+    :Générer rapport;
+  endif
+
+  if (Exporter données ?) then (Oui)
+    :Exporter PDF/Excel;
+  endif
+
+else (Non)
+
+  :Afficher message d'erreur;
+
+endif
+
+stop
+
+@enduml

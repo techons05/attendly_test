@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Notes — Prof</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="logo">
+          <img src="../assets/logo1.jpeg" alt="Attendly Logo">
+        </div>
+        <div class="brand-title">
+          <h2>Attendly</h2>
+          <p>Espace Professeur</p>
+        </div>
+      </div>
+      <div class="avatar-icon" onclick="window.location.href='profile.html'" title="Profil">
+        👨‍🏫
+      </div>
+    </div>
+
+    <nav>
+      <a href="emploi.html"><span class="icon"><i class="bi bi-calendar-week"></i></span>Emploi du temps</a>
+      <a href="attendance.html"><span class="icon"><i class="bi bi-clipboard-check"></i></span>Génération QR Code</a>
+      <a href="attendance-list.html"><span class="icon"><i class="bi bi-bar-chart"></i></span>Liste des présences</a>
+      <a href="notes.html" class="active"><span class="icon"><i class="bi bi-grid-3x3"></i></span>Notes</a>
+      <a href="profile.html"><span class="icon"><i class="bi bi-person"></i></span>Profil</a>
+      <a href="parametres.html"><span class="icon"><i class="bi bi-gear"></i></span>Paramètres</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <h1>Gestion des Notes</h1>
+      <p>Saisir et gérer les notes des étudiants</p>
+    </div>
+
+    <!-- Add Grade Form -->
+    <div class="content-card">
+      <h2><i class="bi bi-plus-circle"></i> Ajouter une note</h2>
+      <form id="gradeForm" class="form-grid">
+        <div class="form-group">
+          <label for="gradeStudent">Étudiant</label>
+          <select id="gradeStudent" required>
+            <option value="">Sélectionner...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="gradeLevel">Niveau</label>
+          <select id="gradeLevel" required>
+            <option value="">Sélectionner...</option>
+            <option value="licence_info_1">Licence Info 1</option>
+            <option value="licence_info_2">Licence Info 2</option>
+            <option value="licence_info_3">Licence Info 3</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="gradeSubject">Matière</label>
+          <input type="text" id="gradeSubject" placeholder="Ex: Base de données" required>
+        </div>
+        <div class="form-group">
+          <label for="gradeType">Type d'examen</label>
+          <select id="gradeType">
+            <option value="">Sélectionner...</option>
+            <option value="DS">DS</option>
+            <option value="Examen">Examen</option>
+            <option value="TP">TP</option>
+            <option value="Projet">Projet</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="gradeNote">Note</label>
+          <input type="number" id="gradeNote" min="0" max="20" step="0.25" placeholder="0-20" required>
+        </div>
+        <div class="form-group">
+          <label for="gradeMax">Note maximale</label>
+          <input type="number" id="gradeMax" value="20" min="1" max="100">
+        </div>
+        <div class="form-group">
+          <label for="gradeDate">Date de l'examen</label>
+          <input type="date" id="gradeDate" required>
+        </div>
+      </form>
+      <button type="button" class="btn-primary" onclick="addGrade()">
+        <i class="bi bi-check-lg"></i> Ajouter la note
+      </button>
+    </div>
+
+    <!-- Grades List -->
+    <div class="content-card">
+      <div class="card-header-row">
+        <h2><i class="bi bi-list-stars"></i> Notes enregistrées</h2>
+        <div class="action-buttons-row">
+          <button class="btn-secondary" onclick="exportGrades()">
+            <i class="bi bi-download"></i> Exporter CSV
+          </button>
+          <button class="btn-primary" onclick="sendGradesToAdmin()">
+            <i class="bi bi-send"></i> Envoyer à l'admin
+          </button>
+        </div>
+      </div>
+      
+      <div class="filters-row">
+        <div class="form-group">
+          <label for="filterGrade">Filtrer par niveau</label>
+          <select id="filterGrade" onchange="loadGrades()">
+            <option value="">Tous</option>
+            <option value="licence_info_1">Licence Info 1</option>
+            <option value="licence_info_2">Licence Info 2</option>
+            <option value="licence_info_3">Licence Info 3</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="filterSubject">Filtrer par matière</label>
+          <input type="text" id="filterSubject" placeholder="Matière" onkeyup="loadGrades()">
+        </div>
+      </div>
+      
+      <div class="table-wrapper">
+        <table id="gradesTable">
+          <thead>
+            <tr>
+              <th>Étudiant</th>
+              <th>Niveau</th>
+              <th>Matière</th>
+              <th>Type</th>
+              <th>Note</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="gradesBody">
+            <tr>
+              <td colspan="7" class="text-center">Aucune note enregistrée</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script type="module" src="js/app.js"></script>
+<script type="module">
+  import { addNote, getAllNotesForClass, getCurrentUser, formatDate } from '../js/database.js';
+  
+  // Load students when grade is selected
+  document.getElementById('gradeLevel').addEventListener('change', async function() {
+    const grade = this.value;
+    if (!grade) return;
+    
+    // Load students for this grade from Supabase
+    const { data: students, error } = await supabase
+      .from('students')
+      .select('id, full_name, cin')
+      .eq('grade', grade)
+      .order('full_name');
+    
+    if (error) {
+      console.error('Error loading students:', error);
+      return;
+    }
+    
+    const select = document.getElementById('gradeStudent');
+    select.innerHTML = '<option value="">Sélectionner...</option>';
+    students.forEach(student => {
+      select.innerHTML += `<option value="${student.id}">${student.full_name} (${student.cin})</option>`;
+    });
+  });
+  
+  // Override addGrade function
+  window.addGrade = async function() {
+    const user = getCurrentUser();
+    if (!user) {
+      alert('Veuillez vous connecter');
+      return;
+    }
+    
+    const noteData = {
+      studentId: document.getElementById('gradeStudent').value,
+      professorId: user.id,
+      grade: document.getElementById('gradeLevel').value,
+      subject: document.getElementById('gradeSubject').value,
+      examType: document.getElementById('gradeType').value,
+      note: parseFloat(document.getElementById('gradeNote').value),
+      maxNote: parseFloat(document.getElementById('gradeMax').value) || 20,
+      examDate: document.getElementById('gradeDate').value
+    };
+    
+    if (!noteData.studentId || !noteData.grade || !noteData.subject || !noteData.note || !noteData.examDate) {
+      alert('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+    
+    const result = await addNote(noteData);
+    
+    if (result.success) {
+      alert('Note ajoutée avec succès!');
+      document.getElementById('gradeForm').reset();
+      document.getElementById('gradeDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('gradeMax').value = 20;
+      loadGrades(); // Refresh the list
+    } else {
+      alert('Erreur: ' + result.error);
+    }
+  };
+  
+  // Override loadGrades function
+  window.loadGrades = async function() {
+    const gradeFilter = document.getElementById('filterGrade').value;
+    const subjectFilter = document.getElementById('filterSubject').value.toLowerCase();
+    
+    if (!gradeFilter) {
+      document.getElementById('gradesBody').innerHTML = 
+        '<tr><td colspan="7" class="text-center">Sélectionnez un niveau pour voir les notes</td></tr>';
+      return;
+    }
+    
+    const result = await getAllNotesForClass(gradeFilter);
+    
+    if (result.success) {
+      let notes = result.data;
+      
+      // Apply subject filter
+      if (subjectFilter) {
+        notes = notes.filter(n => n.subject.toLowerCase().includes(subjectFilter));
+      }
+      
+      const tbody = document.getElementById('gradesBody');
+      if (notes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Aucune note trouvée</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = notes.map(note => `
+        <tr>
+          <td>${note.students?.full_name || 'N/A'}</td>
+          <td>${note.grade}</td>
+          <td>${note.subject}</td>
+          <td>${note.exam_type}</td>
+          <td>${note.note}/${note.max_note}</td>
+          <td>${formatDate(note.exam_date)}</td>
+          <td>
+            <button class="btn-icon" onclick="editGrade('${note.id}')" title="Modifier">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn-icon" onclick="deleteGrade('${note.id}')" title="Supprimer">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    } else {
+      document.getElementById('gradesBody').innerHTML = 
+        '<tr><td colspan="7" class="text-center">Erreur: ' + result.error + '</td></tr>';
+    }
+  };
+  
+  // Initialize date field
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('gradeDate').value = new Date().toISOString().split('T')[0];
+  });
+  
+  // Placeholder functions
+  window.editGrade = function(id) {
+    alert('Fonction de modification à implémenter (ID: ' + id + ')');
+  };
+  
+  window.deleteGrade = function(id) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette note?')) {
+      alert('Fonction de suppression à implémenter (ID: ' + id + ')');
+    }
+  };
+  
+  window.exportGrades = function() {
+    alert('Fonction d\'export CSV à implémenter');
+  };
+  
+  window.sendGradesToAdmin = function() {
+    alert('Notes envoyées à l\'administrateur!');
+  };
+</script>
+</body>
+</html>

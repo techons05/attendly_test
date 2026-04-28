@@ -1,0 +1,114 @@
+@startuml Classe_Espace_Professeur
+title Diagramme de Classes — Espace Professeur
+
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor #F5F3FF
+  BorderColor #7C3AED
+  FontColor #1F2937
+  HeaderBackgroundColor #EDE9FE
+}
+skinparam ArrowColor #6B7280
+skinparam stereotypeCBackgroundColor #DDD6FE
+
+' ─────────────────────────────────────
+class Professeur {
+  - id          : int
+  - nom         : String
+  - email       : String
+  - motDePasse  : String
+  --
+  + seConnecter()                         : bool
+  + consulterEmploi()                     : List<Cours>
+  + lancerPresence(cours: Cours)          : QRCode
+  + marquerManuellement(p: Presence,\n      s: StatutPresence)  : void
+  + modifierPresence(p: Presence,\n      s: StatutPresence)     : void
+  + consulterPresences(cours: Cours)      : List<Presence>
+  + saisirNotes()                         : void
+  + publierNotes(groupeId: int)           : void
+}
+
+class EmploiDuTemps {
+  - semestre   : String
+  - anneeAcad  : String
+  --
+  + afficherSemaine()        : List<Cours>
+  + filtrerParJour(j: Date)  : List<Cours>
+  + prochainCours()          : Cours
+}
+
+class Cours {
+  - id         : int
+  - matiere    : String
+  - salle      : String
+  - heureDebut : DateTime
+  - heureFin   : DateTime
+  --
+  + getDuree()   : int
+  + getGroupes() : List<Groupe>
+}
+
+class QRCode {
+  - token    : String
+  - genereA  : DateTime
+  - expireA  : DateTime
+  - duree    : int = 15
+  --
+  + estValide()   : bool
+  + getToken()    : String
+  + genererImage(): byte[]
+}
+
+class Presence {
+  - id             : int
+  - heurePointage  : DateTime
+  - statut         : StatutPresence
+  - saisieManuelle : bool
+  --
+  + exporter() : File
+}
+
+enum StatutPresence {
+  PRESENT
+  ABSENT
+  RETARD
+}
+
+class Note {
+  - id       : int
+  - valeur   : float
+  - typeEval : String
+  - publie   : bool
+  --
+  + calculerMoyenne() : float
+  + envoyerAdmin()    : void
+}
+
+class Groupe {
+  - id      : int
+  - libelle : String
+  --
+  + getNombreInscrits() : int
+}
+
+' ─────────────────────────────────────
+' Relations
+
+Professeur    "1"   --    "1"    EmploiDuTemps : consulte >
+EmploiDuTemps "1"   *--   "1..*" Cours         : contient >
+
+Professeur    "1"   ..>          QRCode         : <<crée>>
+Professeur    "1"   ..>          Presence       : <<gère>>
+
+Cours         "1"   --    "*"    QRCode         : associé à >
+Cours         "1"   --    "*"    Presence       : regroupe >
+Cours         "*"   --    "*"    Groupe         : concerne >
+
+QRCode        "1"   --    "*"    Presence       : valide >
+
+Presence       ..         StatutPresence
+
+Groupe        "1"   --    "*"    Note           : reçoit >
+Cours         "*"   ..    "*"    Note           : évalué par >
+
+@enduml

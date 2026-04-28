@@ -1,0 +1,66 @@
+@startuml UC_Espace_Professeur
+title Diagramme de Cas d'Utilisation — Espace Professeur (v3)
+
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EDE9FE
+  BorderColor #7C3AED
+  FontColor #3B0764
+}
+skinparam actor {
+  BackgroundColor #E0F2FE
+  BorderColor #0369A1
+}
+skinparam ArrowColor #6B7280
+skinparam packageBorderColor #9CA3AF
+skinparam packageBackgroundColor #F9FAFB
+
+left to right direction
+
+actor "Professeur" as Prof
+rectangle "Système — Espace Professeur" {
+
+  ' ── Authentification
+  usecase "Se connecter"                    as UC0
+
+  ' ── Emploi du temps
+  usecase "Consulter emploi du temps"       as UC1
+
+  ' ── Gestion présence (pilotée par le prof)
+  usecase "Lancer la présence\n(générer QR code)"   as UC2
+  usecase "Marquer manuellement\nun étudiant"        as UC3
+  usecase "Modifier un statut\nde présence"          as UC4
+  usecase "Consulter la liste\ndes présences"        as UC5
+
+
+  ' ── Notes
+  usecase "Saisir les notes"                as UC7
+  usecase "Envoyer notes\nà l'admin"        as UC8
+
+  ' ── include : authentification obligatoire
+  UC1 ..> UC0 : <<include>>
+  UC2 ..> UC0 : <<include>>
+  UC3 ..> UC0 : <<include>>
+  UC4 ..> UC0 : <<include>>
+  UC5 ..> UC0 : <<include>>
+  UC7 ..> UC0 : <<include>>
+
+  ' ── include : le QR est généré dans UC2
+
+  ' ── extend : le marquage manuel étend la consultation
+  UC3 ..> UC5 : <<extend>>
+  UC4 ..> UC5 : <<extend>>
+
+  ' ── include : envoyer notes dépend de saisir notes
+  UC8 ..> UC7 : <<include>>
+}
+
+' ── Relations acteurs
+Prof --> UC1
+Prof --> UC2
+Prof --> UC3
+Prof --> UC4
+Prof --> UC5
+Prof --> UC7
+
+@enduml
