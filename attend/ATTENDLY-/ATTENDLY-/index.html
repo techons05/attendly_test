@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATTENDLY | Gestion de Présence et Emploi du Temps - ISIMM</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                        </svg>
+                    </div>
+                    <div class="logo-text">
+                        <span class="logo-title">ATTENDLY</span>
+                        <span class="logo-subtitle">ISIMM Monastir</span>
+                    </div>
+                </div>
+                
+                <nav class="nav-buttons">
+                    <a href="loginE.html" class="btn btn-outline">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        Espace Étudiant
+                    </a>
+                    <a href="loginP.html" class="btn btn-primary">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        Espace Professeur
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-background">
+            <div class="hero-gradient"></div>
+            <div class="hero-pattern"></div>
+        </div>
+        
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="badge-icon">✨</span>
+                    Institut Supérieur d'Informatique et de Mathématiques
+                </div>
+                
+                <h1 class="hero-title">
+                    Gestion Intelligente de
+                    <span class="hero-title-highlight">Présence</span>
+                </h1>
+                
+                <p class="hero-description">
+                    Solution moderne pour la gestion automatisée des présences et des emplois du temps. 
+                    Simplifiez le suivi académique avec des QR codes et des notifications en temps réel.
+                </p>
+                
+                <div class="hero-buttons">
+                    <a href="loginE.html" class="btn btn-hero-primary">
+                        Commencer en tant qu'étudiant
+                        <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                        </svg>
+                    </a>
+                    <a href="loginP.html" class="btn btn-hero-secondary">
+                        Accès professeur
+                    </a>
+                </div>
+                
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">500+</div>
+                        <div class="stat-label">Étudiants</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number">50+</div>
+                        <div class="stat-label">Professeurs</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Automatisé</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Fonctionnalités Principales</h2>
+                <p class="section-description">
+                    Un système complet pour simplifier la gestion académique
+                </p>
+            </div>
+            
+            <div class="features-grid">
+                <!-- Feature 1 -->
+                <div class="feature-card">
+                    <div class="feature-icon blue">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">QR Code Intelligent</h3>
+                    <p class="feature-description">
+                        Marquez votre présence en scannant simplement un QR code généré par votre professeur. 
+                        Rapide, sécurisé et sans contact.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="feature-card">
+                    <div class="feature-icon green">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Emploi du Temps</h3>
+                    <p class="feature-description">
+                        Consultez votre emploi du temps personnalisé selon votre niveau et groupe de TD. 
+                        Toujours à jour, accessible partout.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="feature-card">
+                    <div class="feature-icon purple">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Notifications Automatiques</h3>
+                    <p class="feature-description">
+                        Recevez des alertes automatiques en cas d'absences répétées. 
+                        Restez informé de votre situation académique.
+                    </p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="feature-card">
+                    <div class="feature-icon orange">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Gestion des Notes</h3>
+                    <p class="feature-description">
+                        Consultez vos notes et celles de votre classe. 
+                        Suivez votre progression académique en temps réel.
+                    </p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="feature-card">
+                    <div class="feature-icon red">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Statistiques</h3>
+                    <p class="feature-description">
+                        Visualisez vos statistiques de présence et vos moyennes. 
+                        Des graphiques clairs pour un suivi optimal.
+                    </p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="feature-card">
+                    <div class="feature-icon teal">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Sécurité Renforcée</h3>
+                    <p class="feature-description">
+                        Authentification sécurisée avec mots de passe hashés. 
+                        Vos données sont protégées à chaque instant.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Comment ça marche ?</h2>
+                <p class="section-description">
+                    Simple, rapide et efficace en 3 étapes
+                </p>
+            </div>
+            
+            <div class="steps-grid">
+                <div class="step">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                        </svg>
+                    </div>
+                    <h3 class="step-title">Inscription</h3>
+                    <p class="step-description">
+                        Créez votre compte avec votre CIN. 
+                        Votre email est déjà enregistré par l'administration.
+                    </p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                        </svg>
+                    </div>
+                    <h3 class="step-title">Scanner</h3>
+                    <p class="step-description">
+                        En cours, scannez le QR code affiché par votre professeur 
+                        pour marquer votre présence instantanément.
+                    </p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="step-title">Suivre</h3>
+                    <p class="step-description">
+                        Consultez votre historique de présence, vos notes 
+                        et recevez des notifications personnalisées.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2 class="cta-title">Prêt à commencer ?</h2>
+                <p class="cta-description">
+                    Rejoignez des centaines d'étudiants et professeurs qui utilisent déjà ATTENDLY
+                </p>
+                <div class="cta-buttons">
+                    <a href="loginE.html" class="btn btn-cta-white">
+                        Se connecter
+                    </a>
+                    <a href="loginE.html" class="btn btn-cta-outline">
+                        Créer un compte
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo">
+                        <div class="logo-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <div class="logo-text">
+                            <span class="logo-title">ATTENDLY</span>
+                            <span class="logo-subtitle">ISIMM Monastir</span>
+                        </div>
+                    </div>
+                    <p class="footer-description">
+                        Système de gestion de présence et d'emploi du temps pour 
+                        l'Institut Supérieur d'Informatique et de Mathématiques de Monastir.
+                    </p>
+                </div>
+
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4 class="footer-column-title">Accès Rapide</h4>
+                        <ul class="footer-list">
+                            <li><a href="loginE.html">Espace Étudiant</a></li>
+                            <li><a href="loginP.html">Espace Professeur</a></li>
+                            <li><a href="loginE.html">Créer un compte</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-column">
+                        <h4 class="footer-column-title">ISIMM</h4>
+                        <ul class="footer-list">
+                            <li><a href="https://www.isimm.rnu.tn/" target="_blank">Site officiel</a></li>
+                            <li><a href="http://www.um.rnu.tn/" target="_blank">Université de Monastir</a></li>
+                            <li><a href="#">Contact</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-column">
+                        <h4 class="footer-column-title">Informations</h4>
+                        <ul class="footer-list">
+                            <li>Avenue de la Corniche</li>
+                            <li>BP 223, Monastir 5000</li>
+                            <li>Tunisie</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 ATTENDLY - ISIMM Monastir. Tous droits réservés.</p>
+                <p class="footer-university">Institut Supérieur d'Informatique et de Mathématiques de Monastir</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

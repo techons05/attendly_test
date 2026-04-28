@@ -1,0 +1,57 @@
+@startuml
+
+actor Administrateur as Admin
+participant "Interface Web\n(Dashboard Admin)" as UI
+participant "Supabase Auth" as Auth
+participant "Supabase DB\n(PostgreSQL)" as DB
+participant "Edge Function\n(Email)" as Edge
+participant "Export\n(jsPDF/SheetJS)" as Export
+
+== Authentification ==
+Admin -> UI : Saisit email + mot de passe
+UI -> Auth : signInWithPassword(email, password)
+Auth --> UI : token JWT + session
+UI --> Admin : Accès Dashboard Admin
+
+== Gestion des professeurs ==
+Admin -> UI :  Modifier / Supprimer professeur
+UI -> DB : UPDATE / DELETE professeurs
+DB --> UI : Confirmation
+UI --> Admin : Mise à jour affichée
+
+== Gestion des étudiants ==
+Admin -> UI : Modifier / Supprimer étudiant
+UI -> DB : UPDATE / DELETE etudiants
+DB --> UI : Confirmation
+UI --> Admin : Mise à jour affichée
+
+== Consultation des présences ==
+Admin -> UI : Sélectionne classe / période
+UI -> DB : SELECT presences JOIN etudiants WHERE ...
+DB --> UI : Données de présence
+UI --> Admin : Affichage (tableaux / graphiques)
+
+== Consultation des notes ==
+Admin -> UI : Sélectionne classe / matière
+UI -> DB : SELECT notes JOIN etudiants WHERE ...
+DB --> UI : Données des notes
+UI --> Admin : Affichage (tableaux / moyennes)
+
+== Consultation des rapports ==
+Admin -> UI : Demande rapport (classe / période)
+UI -> DB : SELECT presences, notes, stats
+DB --> UI : Données agrégées
+UI --> Admin : Affichage rapport
+
+== Export ==
+Admin -> UI : Clic "Exporter PDF / Excel"
+UI -> Export : generateFile(data)
+Export --> Admin : Fichier téléchargé
+
+== Réinitialisation de mot de passe ==
+Admin -> UI : Sélectionne utilisateur
+UI -> Auth : resetPasswordForEmail(email)
+Auth --> UI : Email de réinitialisation envoyé
+UI --> Admin : Confirmation
+
+@enduml

@@ -1,0 +1,96 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Administrateur {
+  - id : Integer
+  - email : String
+  - motDePasse : String
+  - role : String = "admin"
+  + seConnecter() : Boolean
+  + reinitialiserMotDePasse(userId) : void
+  + supprimerCompte(userId) : void
+  + consulterStatistiques() : Rapport
+  + exporterDonnees(format) : Fichier
+}
+
+class Professeur {
+  - id : Integer
+  - userId : Integer
+  - nom : String
+  - prenom : String
+  - email : String
+  - specialite : String
+  - motDePasseInitial : String
+}
+
+class Etudiant {
+  - id : Integer
+  - userId : Integer
+  - cin : String
+  - nom : String
+  - prenom : String
+  - niveau : String
+  - classe : String
+  - email : String
+  - photoUrl : String
+}
+
+class Matiere {
+  - id : Integer
+  - nom : String
+  - code : String
+  - niveau : String
+  - semestre : Integer
+  - coefficient : Float
+}
+
+class EmploiDuTemps {
+  - id : Integer
+  - niveau : String
+  - jour : String
+  - heureDebut : Time
+  - heureFin : Time
+  - matiereId : Integer
+  - professeurId : Integer
+}
+
+class Seance {
+  - id : Integer
+  - matiereId : Integer
+  - professeurId :Integer
+  - date : Date
+  - heureDebut : Time
+  - heureFin : Time
+  - typeSeance : String
+  - qrCode : String
+}
+
+class Presence {
+  - id : Integer
+  - seanceId : Integer
+  - etudiantId : Integer
+  - statut : String
+  - timestamp : DateTime
+  - justification : String
+}
+
+class Rapport {
+  - tauxPresence : Float
+  - nbAbsences : Integer
+  - niveau : String
+  - classe : String
+  + genererPDF() : Fichier
+  + genererExcel() : Fichier
+}
+
+Administrateur "1" --> "*" Professeur : gère
+Administrateur "1" --> "*" Etudiant : gère
+Administrateur "1" --> "*" Matiere : gère
+Administrateur "1" --> "*" EmploiDuTemps : gère
+Administrateur "1" --> "*" Presence : consulte
+Administrateur "1" --> "1" Rapport : consulte
+Seance "*" --> "1" Matiere :a propos
+Seance "*" --> "1" Professeur:assisté par
+Presence "*" --> "1" Seance
+Presence "*" --> "1" Etudiant:marque
+@enduml
